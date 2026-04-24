@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import os; f='.dart_tool/package_config.json'; print\\(os.path.getmtime\\(f\\)\\)\")",
+      "Bash(python -c \"import os; f='pubspec.yaml'; print\\(os.path.getmtime\\(f\\)\\)\")",
+      "Bash(flutter build *)",
+      "Read(//c/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/share_plus-10.1.4/android/src/main/**)",
+      "Read(//storage/emulated/0/**)",
+      "Read(//c/Users/hp/Downloads/**)",
+      "Bash(python -c ' *)",
+      "Read(//c/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/excel-4.0.6/lib/**)"
+    ]
+  }
+}

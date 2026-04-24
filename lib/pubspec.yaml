@@ -1,0 +1,34 @@
+name: bookme
+description: Personal booking system with Google Calendar & WhatsApp
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Google Sign-In & Calendar
+  google_sign_in: ^6.2.1
+  googleapis: ^12.0.0
+  # WhatsApp Intent
+  url_launcher: ^6.2.5
+  # Local notifications
+  flutter_local_notifications: ^17.0.0
+  # Date/time helpers
+  intl: ^0.19.0
+  # State management
+  provider: ^6.1.2
+  # Shared preferences (store auth token)
+  shared_preferences: ^2.2.3
+  # HTTP
+  http: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

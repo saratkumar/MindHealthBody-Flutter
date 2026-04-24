@@ -1,0 +1,37 @@
+name: bookme
+description: "Personal booking system with Google Calendar & WhatsApp"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_sign_in: ^6.2.1
+  googleapis: ^12.0.0
+  url_launcher: ^6.2.5
+  flutter_local_notifications: ^17.0.0
+  intl: ^0.19.0
+  provider: ^6.1.2
+  shared_preferences: ^2.2.3
+  http: ^1.2.1
+  pdf: ^3.10.8
+  path_provider: ^2.1.4
+  share_plus: ^10.0.0
+  excel: ^4.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/invoice_template.xlsx
+    - assets/image1.jpeg
+    - assets/image2.png
