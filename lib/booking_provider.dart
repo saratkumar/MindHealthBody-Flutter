@@ -35,8 +35,8 @@ class BookingProvider extends ChangeNotifier {
 
   DateTime selectedDate = DateTime.now();
   int slotDurationMinutes = 90; // 60 or 90
-  int workStartHour = 9;
-  int workEndHour = 18;
+  int workStartHour = 0;
+  int workEndHour = 24;
 
   List<TimeSlot> slots = [];
   TimeSlot? selectedSlot;
@@ -45,6 +45,7 @@ class BookingProvider extends ChangeNotifier {
   List<Booking> myUpcomingBookings = [];
   List<Booking> othersUpcomingBookings = [];
   List<Booking> pastBookings = [];
+  List<Booking> pastSharedBookings = [];
   List<Booking> calendarEvents = [];
 
   // ─── Auth ────────────────────────────────────────────────
@@ -70,6 +71,7 @@ class BookingProvider extends ChangeNotifier {
     myUpcomingBookings = [];
     othersUpcomingBookings = [];
     pastBookings = [];
+    pastSharedBookings = [];
     calendarEvents = [];
     status = BookingStatus.idle;
     errorMessage = null;
@@ -186,8 +188,12 @@ class BookingProvider extends ChangeNotifier {
   Future<void> loadHistory() async {
     if (!isSignedIn) return;
     try {
-      final events = await _calendarService.getPastBookings();
-      pastBookings = events.map((e) => _eventToBooking(e)).toList();
+      final myEvents = await _calendarService.getPastMyBookings();
+      pastBookings = myEvents.map((e) => _eventToBooking(e)).toList();
+
+      final sharedEvents = await _calendarService.getPastSharedBookings();
+      pastSharedBookings = sharedEvents.map((e) => _eventToBooking(e)).toList();
+
       notifyListeners();
     } catch (_) {}
   }

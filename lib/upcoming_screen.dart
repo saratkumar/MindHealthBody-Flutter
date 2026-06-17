@@ -99,92 +99,21 @@ class UpcomingScreen extends StatelessWidget {
   }
 }
 
-// ── Invoice helpers (top-level so both StatelessWidget and dialogs can use them)
+// ── Invoice helpers ───────────────────────────────────────────────────────────
 
 void _showInvoiceDialog(BuildContext context, Booking booking) {
-  final feeCtrl = TextEditingController();
-  final discountCtrl = TextEditingController(text: '0');
-
   showDialog(
     context: context,
-    builder: (ctx) {
-      return AlertDialog(
-        title: const Text('Generate Invoice'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              booking.guestName,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-            ),
-            if (booking.guestPhone.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2, bottom: 14),
-                child: Text(
-                  booking.guestPhone,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              )
-            else
-              const SizedBox(height: 14),
-            TextField(
-              controller: feeCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Fee (₹)',
-                border: OutlineInputBorder(),
-                prefixText: '₹ ',
-              ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: discountCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Less CHS1 (₹)',
-                border: OutlineInputBorder(),
-                prefixText: '₹ ',
-                helperText: 'Discount / concession amount',
-              ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              final fee = double.tryParse(feeCtrl.text.trim()) ?? 0;
-              if (fee <= 0) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Please enter a valid fee')),
-                );
-                return;
-              }
-              final discount = double.tryParse(discountCtrl.text.trim()) ?? 0;
-              Navigator.pop(ctx);
-              _generateAndShare(context, booking, fee: fee, lessCHS1: discount);
-            },
-            icon: const Icon(Icons.picture_as_pdf, size: 16),
-            label: const Text('Generate & Send'),
-          ),
-        ],
-      );
-    },
+    builder: (ctx) => _InvoiceDialog(booking: booking, parentContext: context),
   );
 }
 
 Future<void> _generateAndShare(
   BuildContext context,
   Booking booking, {
-  required double fee,
-  required double lessCHS1,
+  required List<InvoiceItem> items,
 }) async {
-  // Show loading indicator
+  final total = items.fold<double>(0, (s, i) => s + i.amount);
   final messenger = ScaffoldMessenger.of(context);
   final loadingBar = messenger.showSnackBar(
     const SnackBar(
@@ -204,16 +133,14 @@ Future<void> _generateAndShare(
   );
 
   try {
-    // 1. Record session → get client record + invoice number
     final (client, invoiceNumber) = await ClientDatabase.recordSession(
       name: booking.guestName,
       phone: booking.guestPhone,
       sessionDate: booking.startTime,
-      fee: fee,
-      lessCHS1: lessCHS1,
+      fee: total,
+      lessCHS1: 0,
     );
 
-    // 2. Update Excel workbook (Sheet 1 filled, Sheet 2 upserted, named copy saved)
     await InvoiceExcelService.writeInvoice(
       invoiceNumber: invoiceNumber,
       sessionDate: booking.startTime,
@@ -223,24 +150,21 @@ Future<void> _generateAndShare(
       monthKey: client.monthKey,
       clientNumber: client.clientNumber,
       totalSessions: client.sessionCount,
-      fee: fee,
-      lessCHS1: lessCHS1,
+      fee: total,
+      lessCHS1: 0,
     );
 
-    // 3. Generate PDF matching Sheet 1 layout
     final pdfFile = await InvoicePdfGenerator.generate(
       invoiceNumber: invoiceNumber,
       invoiceDate: booking.startTime,
       clientName: booking.guestName,
       clientPhone: booking.guestPhone,
       clientId: client.clientId,
-      fee: fee,
-      lessCHS1: lessCHS1,
+      items: items,
     );
 
     loadingBar.close();
 
-    // 4. Open system share sheet (user selects WhatsApp or saves to Downloads)
     await Share.shareXFiles(
       [XFile(pdfFile.path, mimeType: 'application/pdf')],
       subject: 'Invoice $invoiceNumber — ${booking.guestName}',
@@ -253,6 +177,286 @@ Future<void> _generateAndShare(
         SnackBar(content: Text('Failed to generate invoice: $e')),
       );
     }
+  }
+}
+
+// ── Invoice dialog ────────────────────────────────────────────────────────────
+
+class _LineItem {
+  final descCtrl = TextEditingController();
+  final qtyCtrl = TextEditingController(text: '1');
+  final priceCtrl = TextEditingController();
+
+  double get amount {
+    final qty = double.tryParse(qtyCtrl.text) ?? 0;
+    final price = double.tryParse(priceCtrl.text) ?? 0;
+    return qty * price;
+  }
+
+  void dispose() {
+    descCtrl.dispose();
+    qtyCtrl.dispose();
+    priceCtrl.dispose();
+  }
+}
+
+class _InvoiceDialog extends StatefulWidget {
+  final Booking booking;
+  final BuildContext parentContext;
+  const _InvoiceDialog({required this.booking, required this.parentContext});
+
+  @override
+  State<_InvoiceDialog> createState() => _InvoiceDialogState();
+}
+
+class _InvoiceDialogState extends State<_InvoiceDialog> {
+  final List<_LineItem> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _items.add(_LineItem());
+  }
+
+  @override
+  void dispose() {
+    for (final item in _items) {
+      item.dispose();
+    }
+    super.dispose();
+  }
+
+  double get _total => _items.fold(0.0, (s, i) => s + i.amount);
+
+  List<InvoiceItem> _collectItems() {
+    return _items
+        .where((i) => i.descCtrl.text.trim().isNotEmpty)
+        .map((i) => InvoiceItem(
+              description: i.descCtrl.text.trim(),
+              qty: double.tryParse(i.qtyCtrl.text) ?? 1,
+              unitPrice: double.tryParse(i.priceCtrl.text) ?? 0,
+            ))
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Generate Invoice'),
+      contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.booking.guestName,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
+            if (widget.booking.guestPhone.isNotEmpty)
+              Text(
+                widget.booking.guestPhone,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            const SizedBox(height: 14),
+            // Column headers
+            Row(
+              children: [
+                const Expanded(
+                  flex: 5,
+                  child: Text('Description',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey)),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 38,
+                  child: Text('Qty',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600)),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 64,
+                  child: Text('Unit Price',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600)),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 64,
+                  child: Text('Amount',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600)),
+                ),
+                const SizedBox(width: 28),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Scrollable item rows
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (int i = 0; i < _items.length; i++)
+                      _buildItemRow(i),
+                  ],
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => setState(() => _items.add(_LineItem())),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add Item', style: TextStyle(fontSize: 13)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 0),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            const Divider(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text(
+                    '₹ ${_total.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            final invoiceItems = _collectItems();
+            if (invoiceItems.isEmpty || _total <= 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text(
+                        'Add at least one item with a valid amount')),
+              );
+              return;
+            }
+            Navigator.pop(context);
+            _generateAndShare(widget.parentContext, widget.booking,
+                items: invoiceItems);
+          },
+          icon: const Icon(Icons.picture_as_pdf, size: 16),
+          label: const Text('Generate & Send'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildItemRow(int index) {
+    final item = _items[index];
+    final amt = item.amount;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: TextField(
+              controller: item.descCtrl,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                border: OutlineInputBorder(),
+                hintText: 'Description',
+              ),
+              style: const TextStyle(fontSize: 12),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 38,
+            child: TextField(
+              controller: item.qtyCtrl,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 4, vertical: 7),
+                border: OutlineInputBorder(),
+              ),
+              style: const TextStyle(fontSize: 12),
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 64,
+            child: TextField(
+              controller: item.priceCtrl,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 4, vertical: 7),
+                border: OutlineInputBorder(),
+              ),
+              style: const TextStyle(fontSize: 12),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.right,
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 64,
+            child: Text(
+              amt > 0 ? amt.toStringAsFixed(2) : '',
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+          SizedBox(
+            width: 28,
+            child: _items.length > 1
+                ? IconButton(
+                    icon: const Icon(Icons.close, size: 14),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => setState(() {
+                      item.dispose();
+                      _items.removeAt(index);
+                    }),
+                  )
+                : const SizedBox(),
+          ),
+        ],
+      ),
+    );
   }
 }
 

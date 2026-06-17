@@ -232,15 +232,32 @@ class CalendarService {
     return result.items ?? [];
   }
 
-  /// Past bookings from the shared calendar.
-  Future<List<cal.Event>> getPastBookings({int days = 30}) async {
+  /// Past bookings from the signed-in user's primary calendar.
+  Future<List<cal.Event>> getPastMyBookings({int days = 90}) async {
     await _ensureApi();
 
     final result = await _calendarApi!.events.list(
-      _calendarId,
+      'primary',
       timeMin: DateTime.now().subtract(Duration(days: days)).toUtc(),
       timeMax: DateTime.now().toUtc(),
-      maxResults: 100,
+      maxResults: 200,
+      orderBy: 'startTime',
+      singleEvents: true,
+    );
+
+    return result.items ?? [];
+  }
+
+  /// Past bookings from the shared room-booking calendar only.
+  Future<List<cal.Event>> getPastSharedBookings({int days = 90}) async {
+    await _ensureApi();
+    if (_sharedCalendarId == null) return [];
+
+    final result = await _calendarApi!.events.list(
+      _sharedCalendarId!,
+      timeMin: DateTime.now().subtract(Duration(days: days)).toUtc(),
+      timeMax: DateTime.now().toUtc(),
+      maxResults: 200,
       orderBy: 'startTime',
       singleEvents: true,
     );

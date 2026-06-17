@@ -9,69 +9,102 @@ class HistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('History'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<BookingProvider>().loadHistory(),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('History'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => context.read<BookingProvider>().loadHistory(),
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'My Bookings'),
+              Tab(text: 'Shared Calendar'),
+            ],
           ),
-        ],
-      ),
-      body: Consumer<BookingProvider>(
-        builder: (context, provider, _) {
-          if (provider.status == BookingStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        ),
+        body: Consumer<BookingProvider>(
+          builder: (context, provider, _) {
+            if (provider.status == BookingStatus.loading &&
+                provider.pastBookings.isEmpty &&
+                provider.pastSharedBookings.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (provider.pastBookings.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 12),
-                  Text('No past bookings',
-                      style: TextStyle(color: Colors.grey.shade500)),
-                ],
-              ),
+            return TabBarView(
+              children: [
+                _BookingList(
+                  bookings: provider.pastBookings,
+                  emptyMessage: 'No past bookings from your calendar',
+                ),
+                _BookingList(
+                  bookings: provider.pastSharedBookings,
+                  emptyMessage: 'No past bookings from the shared calendar',
+                ),
+              ],
             );
-          }
-
-          // Group by month
-          final grouped = <String, List<Booking>>{};
-          for (final b in provider.pastBookings) {
-            final key = DateFormat('MMMM yyyy').format(b.startTime);
-            grouped.putIfAbsent(key, () => []).add(b);
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: grouped.entries.map((entry) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8, top: 4),
-                    child: Text(
-                      entry.key,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade500,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  ...entry.value.map((b) => _HistoryTile(booking: b)),
-                  const SizedBox(height: 8),
-                ],
-              );
-            }).toList(),
-          );
-        },
+          },
+        ),
       ),
+    );
+  }
+}
+
+class _BookingList extends StatelessWidget {
+  final List<Booking> bookings;
+  final String emptyMessage;
+
+  const _BookingList({required this.bookings, required this.emptyMessage});
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookings.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history, size: 48, color: Colors.grey.shade300),
+            const SizedBox(height: 12),
+            Text(emptyMessage,
+                style: TextStyle(color: Colors.grey.shade500)),
+          ],
+        ),
+      );
+    }
+
+    final grouped = <String, List<Booking>>{};
+    for (final b in bookings) {
+      final key = DateFormat('MMMM yyyy').format(b.startTime);
+      grouped.putIfAbsent(key, () => []).add(b);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: grouped.entries.map((entry) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, top: 4),
+              child: Text(
+                entry.key,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade500,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...entry.value.map((b) => _HistoryTile(booking: b)),
+            const SizedBox(height: 8),
+          ],
+        );
+      }).toList(),
     );
   }
 }

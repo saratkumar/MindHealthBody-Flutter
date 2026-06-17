@@ -8,7 +8,10 @@
       "Read(//storage/emulated/0/**)",
       "Read(//c/Users/hp/Downloads/**)",
       "Bash(python -c ' *)",
-      "Read(//c/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/excel-4.0.6/lib/**)"
+      "Read(//c/Users/hp/AppData/Local/Pub/Cache/hosted/pub.dev/excel-4.0.6/lib/**)",
+      "Bash(find /c/Projects/bookme/android/app/src/main/res/mipmap-* -type f)",
+      "Bash(grep -E \"^\\\\s+[A-Z]{2,}.*=\" /c/Projects/bookme/ios/Runner.xcodeproj/project.pbxproj)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }
