@@ -1,49 +1,92 @@
 import 'dart:typed_data';
 
 class IntakeForm {
-  final String fullName;
-  final String email;
-  final String phone;
-  final String dateOfBirth;
-  final String gender;
-  final String occupation;
+  final String patientName; // as per NRIC/Passport
+  final String nricId;
   final String address;
-  final String emergencyContactName;
-  final String emergencyContactPhone;
-  final String presentingConcern;
-  final String medicalHistory;
-  final String medications;
-  final String allergies;
-  final bool consentAccepted;
+  final String country;
+  final String postalCode;
+  final String phone;
+  final String occupation;
+  final String email;
+  final String birthDate;
+  final String sex; // 'M' | 'F' | ''
+  final String race;
+
+  // Referral
+  final bool refWebSearch;
+  final bool refDoctor;
+  final String refDoctorName;
+  final bool refFriend;
+  final String refFriendName;
+  final bool refOther;
+  final String refOtherDetails;
+
+  // Medical
+  final bool underGpCare;
+  final String gpCareDetails;
+  final String gpDoctorName;
+  final bool takingMedication;
+  final String medicationDetails;
+
+  // Goals & history
+  final String psychotherapyGoals;
+  final bool hadHypnotherapy;
+  final String hypnotherapyDetails;
+  final bool hasFearsPhobias;
+  final String fearsPhobiasDetails;
+
+  // Consent page 1
+  final String initials;
+  final String consentClientName;
+  final String date;
   final Uint8List signatureBytes;
+
+  // Confidentiality page 2
+  final String confidentialityClientName;
+  final Uint8List signature2Bytes;
+
   final DateTime submittedAt;
+  final String practitionerEmail;
+  final String practitionerName;
 
   const IntakeForm({
-    required this.fullName,
-    required this.email,
-    required this.phone,
-    required this.dateOfBirth,
-    required this.gender,
-    required this.occupation,
+    required this.patientName,
+    required this.nricId,
     required this.address,
-    required this.emergencyContactName,
-    required this.emergencyContactPhone,
-    required this.presentingConcern,
-    required this.medicalHistory,
-    required this.medications,
-    required this.allergies,
-    required this.consentAccepted,
+    required this.country,
+    required this.postalCode,
+    required this.phone,
+    required this.occupation,
+    required this.email,
+    required this.birthDate,
+    required this.sex,
+    required this.race,
+    required this.refWebSearch,
+    required this.refDoctor,
+    required this.refDoctorName,
+    required this.refFriend,
+    required this.refFriendName,
+    required this.refOther,
+    required this.refOtherDetails,
+    required this.underGpCare,
+    required this.gpCareDetails,
+    required this.gpDoctorName,
+    required this.takingMedication,
+    required this.medicationDetails,
+    required this.psychotherapyGoals,
+    required this.hadHypnotherapy,
+    required this.hypnotherapyDetails,
+    required this.hasFearsPhobias,
+    required this.fearsPhobiasDetails,
+    required this.initials,
+    required this.consentClientName,
+    required this.date,
     required this.signatureBytes,
+    required this.confidentialityClientName,
+    required this.signature2Bytes,
     required this.submittedAt,
-  });
-}
-
-class SubmittedIntakeFiles {
-  final String wordPath;
-  final String pdfPath;
-
-  const SubmittedIntakeFiles({
-    required this.wordPath,
-    required this.pdfPath,
+    required this.practitionerEmail,
+    required this.practitionerName,
   });
 }

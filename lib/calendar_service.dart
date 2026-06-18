@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' as cal;
 import 'package:http/http.dart' as http;
@@ -21,15 +22,21 @@ class _AuthClient extends http.BaseClient {
 }
 
 class CalendarService {
-  static const _scopes = [cal.CalendarApi.calendarScope];
+  static const _scopes = [
+    cal.CalendarApi.calendarScope,
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/gmail.send',
+  ];
   static const _sharedCalendarName = 'Clinical Room Booking';
   static const _roomNames = ['R1', 'R2', 'R3', 'R4'];
   static final _roomPattern = RegExp(r'\b(R[1-4])\b', caseSensitive: false);
 
+  static const _webClientId =
+      '383887707617-30hj9t9l64h5omhegmu6j08fjddkhums.apps.googleusercontent.com';
+
   final _googleSignIn = GoogleSignIn(
     scopes: _scopes,
-    serverClientId:
-        '383887707617-30hj9t9l64h5omhegmu6j08fjddkhums.apps.googleusercontent.com',
+    clientId: kIsWeb ? _webClientId : null,
   );
 
   GoogleSignInAccount? _currentUser;
@@ -37,6 +44,8 @@ class CalendarService {
   String? _sharedCalendarId;
 
   bool get isSignedIn => _currentUser != null;
+  String? get currentUserEmail => _currentUser?.email;
+  GoogleSignInAccount? get currentAccount => _currentUser;
   bool get sharedCalendarFound => _sharedCalendarId != null;
   String get calendarDisplayName =>
       _sharedCalendarId != null ? _sharedCalendarName : 'Primary Calendar';
@@ -44,14 +53,19 @@ class CalendarService {
   // Uses the shared calendar when found, falls back to primary
   String get _calendarId => _sharedCalendarId ?? 'primary';
 
+  String? lastSignInError;
+
   Future<bool> signIn() async {
+    lastSignInError = null;
     try {
       _currentUser = await _googleSignIn.signIn();
       if (_currentUser == null) return false;
+
       await _initApi();
       await _findSharedCalendar();
       return true;
-    } catch (_) {
+    } catch (e) {
+      lastSignInError = e.toString();
       return false;
     }
   }
@@ -271,6 +285,15 @@ class CalendarService {
         .join(' ');
     final match = _roomPattern.firstMatch(source);
     return match?.group(1)?.toUpperCase();
+  }
+
+  /// Request Sheets + Gmail scopes from within a button-press handler so
+  /// the browser allows the GIS OAuth popup.
+  Future<bool> requestApiScopes() async {
+    return _googleSignIn.requestScopes([
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/gmail.send',
+    ]);
   }
 
   Future<void> _ensureApi() async {

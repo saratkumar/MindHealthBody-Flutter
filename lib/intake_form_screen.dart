@@ -1,12 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'booking_provider.dart';
 import 'intake_form.dart';
 import 'intake_form_service.dart';
+import 'sheets_service.dart';
+import 'user_registry.dart';
 
 class IntakeFormScreen extends StatefulWidget {
   const IntakeFormScreen({super.key});
@@ -17,136 +22,280 @@ class IntakeFormScreen extends StatefulWidget {
 
 class _IntakeFormScreenState extends State<IntakeFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _recipientEmailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  final _dobCtrl = TextEditingController();
-  final _genderCtrl = TextEditingController();
-  final _occupationCtrl = TextEditingController();
+  final _sig1Key = GlobalKey<SignaturePadState>();
+  final _sig2Key = GlobalKey<SignaturePadState>();
+
+  // Personal
+  final _nameCtrl = TextEditingController();
+  final _nricCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
-  final _emergencyNameCtrl = TextEditingController();
-  final _emergencyPhoneCtrl = TextEditingController();
-  final _concernCtrl = TextEditingController();
-  final _historyCtrl = TextEditingController();
-  final _medicationsCtrl = TextEditingController();
-  final _allergiesCtrl = TextEditingController();
-  final _signatureKey = GlobalKey<SignaturePadState>();
-  bool _consentAccepted = false;
+  final _countryCtrl = TextEditingController();
+  final _postalCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _occupationCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _dobCtrl = TextEditingController();
+  String _sex = '';
+  final _raceCtrl = TextEditingController();
+
+  // Referral
+  bool _refWebSearch = false;
+  bool _refDoctor = false;
+  final _refDoctorNameCtrl = TextEditingController();
+  bool _refFriend = false;
+  final _refFriendNameCtrl = TextEditingController();
+  bool _refOther = false;
+  final _refOtherCtrl = TextEditingController();
+
+  // Medical
+  bool? _underGpCare;
+  final _gpDetailsCtrl = TextEditingController();
+  final _gpDoctorCtrl = TextEditingController();
+  bool? _takingMedication;
+  final _medicationCtrl = TextEditingController();
+
+  // Goals
+  final _goalsCtrl = TextEditingController();
+
+  // History
+  bool? _hadHypno;
+  final _hypnoCtrl = TextEditingController();
+  bool? _hasFears;
+  final _fearsCtrl = TextEditingController();
+
+  // Consent
+  final _initialsCtrl = TextEditingController();
+  final _consentNameCtrl = TextEditingController();
+  final _dateCtrl = TextEditingController();
+  final _confNameCtrl = TextEditingController();
+
+  // Practitioner
+  List<AppUser> _practitioners = [];
+  AppUser? _selectedPractitioner;
+  bool _loadingPractitioners = true;
+
   bool _submitting = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadPractitioners();
+    _dateCtrl.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    // Pre-fill email from signed-in user
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final email = context.read<BookingProvider>().userEmail ?? '';
+      _emailCtrl.text = email;
+    });
+  }
+
+  Future<void> _loadPractitioners() async {
+    final list = await UserRegistryService.getPractitioners();
+    if (!mounted) return;
+    setState(() {
+      _practitioners = list;
+      _selectedPractitioner = list.length == 1 ? list.first : null;
+      _loadingPractitioners = false;
+    });
+  }
+
+  @override
   void dispose() {
-    _fullNameCtrl.dispose();
-    _emailCtrl.dispose();
-    _recipientEmailCtrl.dispose();
-    _phoneCtrl.dispose();
-    _dobCtrl.dispose();
-    _genderCtrl.dispose();
-    _occupationCtrl.dispose();
-    _addressCtrl.dispose();
-    _emergencyNameCtrl.dispose();
-    _emergencyPhoneCtrl.dispose();
-    _concernCtrl.dispose();
-    _historyCtrl.dispose();
-    _medicationsCtrl.dispose();
-    _allergiesCtrl.dispose();
+    for (final c in [
+      _nameCtrl, _nricCtrl, _addressCtrl, _countryCtrl, _postalCtrl, _phoneCtrl,
+      _occupationCtrl, _emailCtrl, _dobCtrl, _raceCtrl, _refDoctorNameCtrl,
+      _refFriendNameCtrl, _refOtherCtrl, _gpDetailsCtrl, _gpDoctorCtrl,
+      _medicationCtrl, _goalsCtrl, _hypnoCtrl, _fearsCtrl, _initialsCtrl,
+      _consentNameCtrl, _dateCtrl, _confNameCtrl,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _submit(BuildContext context) async {
-    final signature = _signatureKey.currentState;
-    if (signature == null || !signature.hasSignature) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign the intake form')),
-      );
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(1990),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked == null || !mounted) return;
+    _dobCtrl.text = DateFormat('dd/MM/yyyy').format(picked);
+  }
+
+  Future<void> _submit() async {
+    if (_loadingPractitioners) return;
+    if (_practitioners.isEmpty) {
+      _snack('No practitioners registered. Please contact the admin.', error: true);
       return;
     }
-
+    if (_practitioners.length > 1 && _selectedPractitioner == null) {
+      _snack('Please select a practitioner', error: true);
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
-    if (!_consentAccepted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the consent declaration')),
-      );
-      return;
+    if (_underGpCare == null) { _snack('Please answer the GP/Psychiatrist question', error: true); return; }
+    if (_takingMedication == null) { _snack('Please answer the medication question', error: true); return; }
+    if (_hadHypno == null) { _snack('Please answer the hypnotherapy question', error: true); return; }
+    if (_hasFears == null) { _snack('Please answer the fears/phobias question', error: true); return; }
+
+    final sig1 = _sig1Key.currentState;
+    final sig2 = _sig2Key.currentState;
+    if (sig1 == null || !sig1.hasSignature) {
+      _snack('Please sign the consent on page 1', error: true); return;
+    }
+    if (sig2 == null || !sig2.hasSignature) {
+      _snack('Please sign the confidentiality statement on page 2', error: true); return;
     }
 
-    FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
-
     try {
+      final provider = context.read<BookingProvider>();
+      final account = provider.currentAccount as GoogleSignInAccount?;
+
+      // Request Gmail + Sheets scopes directly from button-press context
+      if (account != null) await provider.requestApiScopes();
+
+      final practitioner = _selectedPractitioner ?? _practitioners.first;
+      final now = DateTime.now();
       final form = IntakeForm(
-        fullName: _fullNameCtrl.text.trim(),
-        email: _emailCtrl.text.trim(),
-        phone: _phoneCtrl.text.trim(),
-        dateOfBirth: _dobCtrl.text.trim(),
-        gender: _genderCtrl.text.trim(),
-        occupation: _occupationCtrl.text.trim(),
+        patientName: _nameCtrl.text.trim(),
+        nricId: _nricCtrl.text.trim(),
         address: _addressCtrl.text.trim(),
-        emergencyContactName: _emergencyNameCtrl.text.trim(),
-        emergencyContactPhone: _emergencyPhoneCtrl.text.trim(),
-        presentingConcern: _concernCtrl.text.trim(),
-        medicalHistory: _historyCtrl.text.trim(),
-        medications: _medicationsCtrl.text.trim(),
-        allergies: _allergiesCtrl.text.trim(),
-        consentAccepted: _consentAccepted,
-        signatureBytes: await signature.toImageBytes(),
-        submittedAt: DateTime.now(),
+        country: _countryCtrl.text.trim(),
+        postalCode: _postalCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim(),
+        occupation: _occupationCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        birthDate: _dobCtrl.text.trim(),
+        sex: _sex,
+        race: _raceCtrl.text.trim(),
+        refWebSearch: _refWebSearch,
+        refDoctor: _refDoctor,
+        refDoctorName: _refDoctorNameCtrl.text.trim(),
+        refFriend: _refFriend,
+        refFriendName: _refFriendNameCtrl.text.trim(),
+        refOther: _refOther,
+        refOtherDetails: _refOtherCtrl.text.trim(),
+        underGpCare: _underGpCare == true,
+        gpCareDetails: _gpDetailsCtrl.text.trim(),
+        gpDoctorName: _gpDoctorCtrl.text.trim(),
+        takingMedication: _takingMedication == true,
+        medicationDetails: _medicationCtrl.text.trim(),
+        psychotherapyGoals: _goalsCtrl.text.trim(),
+        hadHypnotherapy: _hadHypno == true,
+        hypnotherapyDetails: _hypnoCtrl.text.trim(),
+        hasFearsPhobias: _hasFears == true,
+        fearsPhobiasDetails: _fearsCtrl.text.trim(),
+        initials: _initialsCtrl.text.trim(),
+        consentClientName: _consentNameCtrl.text.trim(),
+        date: _dateCtrl.text.trim(),
+        signatureBytes: await sig1.toImageBytes(),
+        confidentialityClientName: _confNameCtrl.text.trim(),
+        signature2Bytes: await sig2.toImageBytes(),
+        submittedAt: now,
+        practitionerEmail: practitioner.email,
+        practitionerName: practitioner.name,
       );
 
-      final files = await IntakeFormService.submit(form);
-      await IntakeFormService.sendEmail(
-        recipientEmail: _recipientEmailCtrl.text.trim(),
-        form: form,
-        files: files,
-      );
-      await IntakeFormService.openWord(files.wordPath);
+      await IntakeFormService.generateAndSend(form, account: account);
+
+      // Mark as submitted locally and in Google Sheets (best-effort)
+      final email = provider.userEmail ?? '';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('intake_submitted_$email', true);
+      if (account != null) {
+        try {
+          await SheetsService.recordIntakeSubmission(
+            account: account,
+            clientEmail: email,
+            date: now,
+          );
+        } catch (_) {}
+      }
 
       if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(this.context);
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Intake form submitted. PDF emailed and Word opened.'),
-          backgroundColor: Color(0xFF188038),
+      final viaMail = account != null;
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text(viaMail ? 'Form Sent' : 'Form Downloaded'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: viaMail
+                ? [
+                    const Text('Your intake form has been emailed to:'),
+                    const SizedBox(height: 8),
+                    Row(children: [
+                      const Icon(Icons.email_outlined,
+                          size: 16, color: Color(0xFF1A73E8)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: SelectableText(
+                          practitioner.email,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A73E8)),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 6),
+                    Text('A copy was also sent to your email.',
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600)),
+                  ]
+                : [
+                    const Text('Your intake form PDF has been downloaded.'),
+                    const SizedBox(height: 10),
+                    Text('Please email it manually to your practitioner:',
+                        style: TextStyle(color: Colors.grey.shade700)),
+                    const SizedBox(height: 4),
+                    SelectableText(practitioner.email,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A73E8))),
+                  ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: const Text('Done'),
+            ),
+          ],
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(this.context);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Could not submit intake form: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _snack('Could not send form: $e', error: true);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
   }
 
-  Future<void> _pickDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked == null || !mounted) return;
-    setState(() {
-      _dobCtrl.text = DateFormat('dd/MM/yyyy').format(picked);
-    });
+  void _snack(String msg, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: error ? Colors.red : null,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Submit Intake Form'),
+        title: const Text('Client Intake Form'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_outlined),
             tooltip: 'Sign out',
-            onPressed: () => context.read<BookingProvider>().signOut(),
+            onPressed: () async {
+              Navigator.of(context).popUntil((r) => r.isFirst);
+              await context.read<BookingProvider>().signOut();
+            },
           ),
         ],
       ),
@@ -157,182 +306,339 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SectionTitle(title: 'Client details'),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _fullNameCtrl,
-                label: 'Full name',
-                hint: 'Jane Smith',
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _Field(
-                      controller: _emailCtrl,
-                      label: 'Client email',
-                      hint: 'jane@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                      validator: _email,
+              // ── Header with logo ───────────────────────────────────────────
+              Center(
+                child: Column(
+                  children: [
+                    Image.asset('assets/image2.png', height: 80),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'The MindBody Practice',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A4B8C),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _Field(
-                      controller: _phoneCtrl,
-                      label: 'Phone',
-                      hint: '+60 12 345 6789',
-                      keyboardType: TextInputType.phone,
-                      validator: _required,
+                    const SizedBox(height: 4),
+                    Text(
+                      'Client Intake Form',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'All information is strictly confidential and protected by PDPA',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              // ── Practitioner selection ─────────────────────────────────────
+              if (_loadingPractitioners)
+                const Center(child: CircularProgressIndicator())
+              else if (_practitioners.length > 1) ...[
+                _sectionTitle('Select Practitioner'),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<AppUser>(
+                  value: _selectedPractitioner,
+                  hint: const Text('Choose your practitioner'),
+                  items: _practitioners
+                      .map((p) => DropdownMenuItem(
+                            value: p,
+                            child: Text('${p.name} (${p.email})'),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedPractitioner = v),
+                  validator: (v) => v == null ? 'Please select a practitioner' : null,
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // ── Personal details ───────────────────────────────────────────
+              _sectionTitle('Patient Details'),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _pickDate(context),
-                      child: AbsorbPointer(
-                        child: _Field(
-                          controller: _dobCtrl,
-                          label: 'Date of birth',
-                          hint: 'dd/MM/yyyy',
-                          validator: _required,
+              _field(_nameCtrl, 'Patient\'s Name (as per NRIC/Passport)', required: true),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(child: _field(_nricCtrl, 'NRIC / ID No', required: true)),
+                const SizedBox(width: 10),
+                Expanded(child: _field(_raceCtrl, 'Race')),
+              ]),
+              const SizedBox(height: 10),
+              _field(_addressCtrl, 'Address', maxLines: 2, required: true),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(child: _field(_countryCtrl, 'Country', required: true)),
+                const SizedBox(width: 10),
+                Expanded(child: _field(_postalCtrl, 'Postal Code', required: true)),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: _field(_phoneCtrl, 'Phone (Mobile)',
+                        keyboard: TextInputType.phone, required: true)),
+              ]),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                    child: _field(_occupationCtrl, 'Occupation', required: true)),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: _field(_emailCtrl, 'E-mail',
+                        keyboard: TextInputType.emailAddress, required: true)),
+              ]),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _pickDate,
+                    child: AbsorbPointer(
+                        child: _field(_dobCtrl, 'Birth Date', required: true)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label('Sex'),
+                      Row(children: [
+                        Radio<String>(
+                            value: 'M',
+                            groupValue: _sex,
+                            onChanged: (v) => setState(() => _sex = v!)),
+                        const Text('M'),
+                        const SizedBox(width: 16),
+                        Radio<String>(
+                            value: 'F',
+                            groupValue: _sex,
+                            onChanged: (v) => setState(() => _sex = v!)),
+                        const Text('F'),
+                      ]),
+                    ],
+                  ),
+                ),
+              ]),
+
+              // ── Referral ───────────────────────────────────────────────────
+              const SizedBox(height: 20),
+              _sectionTitle('How were you referred?'),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 0, children: [
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Checkbox(
+                      value: _refWebSearch,
+                      onChanged: (v) => setState(() => _refWebSearch = v!)),
+                  const Text('Web Search'),
+                ]),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Checkbox(
+                      value: _refFriend,
+                      onChanged: (v) => setState(() => _refFriend = v!)),
+                  const Text('Friend'),
+                ]),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Checkbox(
+                      value: _refDoctor,
+                      onChanged: (v) => setState(() => _refDoctor = v!)),
+                  const Text('Doctor'),
+                ]),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Checkbox(
+                      value: _refOther,
+                      onChanged: (v) => setState(() => _refOther = v!)),
+                  const Text('Other'),
+                ]),
+              ]),
+              if (_refDoctor) ...[
+                const SizedBox(height: 6),
+                _field(_refDoctorNameCtrl, 'Doctor\'s Name'),
+              ],
+              if (_refFriend) ...[
+                const SizedBox(height: 6),
+                _field(_refFriendNameCtrl, 'Friend\'s Name'),
+              ],
+              if (_refOther) ...[
+                const SizedBox(height: 6),
+                _field(_refOtherCtrl, 'Other details'),
+              ],
+
+              // ── Medical ────────────────────────────────────────────────────
+              const SizedBox(height: 20),
+              _sectionTitle('Medical History'),
+              const SizedBox(height: 8),
+              _yesNoRow(
+                'Are you under a GP/Psychiatrist\'s care?',
+                _underGpCare,
+                (v) => setState(() => _underGpCare = v),
+              ),
+              if (_underGpCare == true) ...[
+                const SizedBox(height: 8),
+                _field(_gpDetailsCtrl, 'Please elaborate'),
+                const SizedBox(height: 8),
+                _field(_gpDoctorCtrl, 'Doctor\'s Name'),
+              ],
+              const SizedBox(height: 10),
+              _yesNoRow(
+                'Are you taking medication?',
+                _takingMedication,
+                (v) => setState(() => _takingMedication = v),
+                yesLabel: 'Yes, for:',
+              ),
+              if (_takingMedication == true) ...[
+                const SizedBox(height: 8),
+                _field(_medicationCtrl, 'Medication details'),
+              ],
+
+              // ── Goals & history ────────────────────────────────────────────
+              const SizedBox(height: 20),
+              _sectionTitle('Goals & Background'),
+              const SizedBox(height: 8),
+              _field(_goalsCtrl,
+                  'What do you want to accomplish using Psychotherapy?',
+                  maxLines: 3, required: true),
+              const SizedBox(height: 10),
+              _yesNoRow(
+                'Have you ever been through hypnotherapy in the past?',
+                _hadHypno,
+                (v) => setState(() => _hadHypno = v),
+              ),
+              if (_hadHypno == true) ...[
+                const SizedBox(height: 8),
+                _field(_hypnoCtrl, 'Please describe'),
+              ],
+              const SizedBox(height: 10),
+              _yesNoRow(
+                'Do you have any fears/phobias?',
+                _hasFears,
+                (v) => setState(() => _hasFears = v),
+              ),
+              if (_hasFears == true) ...[
+                const SizedBox(height: 8),
+                _field(_fearsCtrl, 'Please describe'),
+              ],
+
+              // ── Contact lenses notice ──────────────────────────────────────
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Color(0xFF1A4B8C), width: 1.5),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Color(0xFFEEF3FB),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: Color(0xFF1A4B8C)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: const Text(
+                        'IF YOU WEAR CONTACT LENSES AND CANNOT COMFORTABLY CLOSE YOUR EYES '
+                        'FOR APPROXIMATELY ½ HOUR WITH THEM IN YOUR EYES, PLEASE REMOVE THEM.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A4B8C),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _Field(
-                      controller: _genderCtrl,
-                      label: 'Gender',
-                      hint: 'Female / Male / Other',
-                      validator: _required,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _occupationCtrl,
-                label: 'Occupation',
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _addressCtrl,
-                label: 'Address',
-                hint: 'Full residential address',
-                maxLines: 2,
-                validator: _required,
-              ),
-              const SizedBox(height: 20),
-              _SectionTitle(title: 'Emergency contact'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _Field(
-                      controller: _emergencyNameCtrl,
-                      label: 'Name',
-                      validator: _required,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _Field(
-                      controller: _emergencyPhoneCtrl,
-                      label: 'Phone',
-                      keyboardType: TextInputType.phone,
-                      validator: _required,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _SectionTitle(title: 'Clinical intake'),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _concernCtrl,
-                label: 'Presenting concern',
-                maxLines: 4,
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _historyCtrl,
-                label: 'Relevant medical / mental health history',
-                maxLines: 4,
-              ),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _medicationsCtrl,
-                label: 'Current medications',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _allergiesCtrl,
-                label: 'Allergies',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 20),
-              _SectionTitle(title: 'Submission'),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _recipientEmailCtrl,
-                label: 'Email to receive form',
-                hint: 'admin@example.com',
-                keyboardType: TextInputType.emailAddress,
-                validator: _email,
-              ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                value: _consentAccepted,
-                onChanged: (value) {
-                  setState(() => _consentAccepted = value == true);
-                },
-                title: const Text(
-                  'I confirm the information is true and consent to its use for clinical intake and appointment purposes.',
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Digital signature',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF6B7280),
-                  fontWeight: FontWeight.w600,
+                  ],
                 ),
               ),
+
+              // ── Page 1 consent ─────────────────────────────────────────────
+              const SizedBox(height: 24),
+              _sectionTitle('Consent & Fee Agreement (Page 1)'),
               const SizedBox(height: 8),
-              SignaturePad(key: _signatureKey),
-              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade50,
+                ),
+                child: const Text(
+                  'THE SUCCESS OF PSYCHOLOGICAL INTERVENTION WILL REST ON YOUR PERSISTENCE WITH THE PROCESS '
+                  'AND THE RECOMMENDATION OF YOUR MENTAL HEALTH PROFESSIONAL. I DO AGREE TO PAY S\$180 per '
+                  'session*/or ___ per session as FEE FOR SERVICES RENDERED. SERVICE FEE WILL BE COLLECTED '
+                  'AT THE END OF EACH SESSION.\n\n'
+                  'I AGREE TO PAY A \$30.00 CHARGE IF I DO NOT GIVE 24 HOUR NOTICE OF CANCELLATION OF MY '
+                  'APPOINTMENT, AND THE FULL PRICE OF THE SESSION FOR A NO CALL / NO SHOW.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(children: [
+                SizedBox(
+                    width: 120,
+                    child: _field(_initialsCtrl, 'Please Initial', required: true)),
+                const SizedBox(width: 10),
+                Expanded(child: _field(_dateCtrl, 'Date', required: true)),
+              ]),
+              const SizedBox(height: 10),
+              _field(_consentNameCtrl, 'I, (your full name)', required: true),
+              const SizedBox(height: 8),
+              const Text(
+                '…gives permission to the Mental Health Professional (MHP) to work with me on my mental '
+                'health condition(s) for the required number of sessions.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF555555)),
+              ),
+              const SizedBox(height: 12),
+              _label('Client Signature (Page 1)'),
+              const SizedBox(height: 6),
+              SignaturePad(key: _sig1Key),
+
+              // ── Page 2 confidentiality ─────────────────────────────────────
+              const SizedBox(height: 24),
+              _sectionTitle('Confidentiality & Safety Statement (Page 2)'),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade50,
+                ),
+                child: const Text(
+                  'Your privacy is important to us. All information shared during your sessions will be kept '
+                  'strictly confidential and used only to support your care. We will not share your information '
+                  'without your written consent, except when required by law, risk of harm, or professional '
+                  'supervision.\n\n'
+                  'Video recording (without audio) may be in place within the consultation room to minimise '
+                  'facial capture. Recordings are deleted within 96 hours unless required for safety or legal '
+                  'obligations.\n\n'
+                  'By signing below, you acknowledge that you understand and agree to the above.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 10),
+              _field(_confNameCtrl, 'Client Name (Page 2)', required: true),
+              const SizedBox(height: 8),
+              _label('Client Signature (Page 2)'),
+              const SizedBox(height: 6),
+              SignaturePad(key: _sig2Key),
+
+              // ── Submit ─────────────────────────────────────────────────────
+              const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _submitting ? null : () => _submit(context),
+                onPressed: _submitting ? null : _submit,
                 child: _submitting
                     ? const SizedBox(
-                        height: 20,
-                        width: 20,
+                        height: 20, width: 20,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Submit signed intake form'),
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('Submit & Send Form'),
               ),
               const SizedBox(height: 8),
               Text(
-                'The editable Word copy opens after submission. The generated PDF is emailed to the address above.',
+                'The form will be emailed to your practitioner and a copy sent to you.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -340,78 +646,65 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
     );
   }
 
-  String? _required(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Required';
-    return null;
+  Widget _sectionTitle(String title) {
+    return Text(title,
+        style: const TextStyle(
+            fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1A73E8)));
   }
 
-  String? _email(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Required';
-    if (!value.contains('@')) return 'Invalid email';
-    return null;
+  Widget _label(String text) {
+    return Text(text,
+        style: TextStyle(
+            fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500));
   }
-}
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF1A73E8),
-      ),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final String? hint;
-  final TextInputType? keyboardType;
-  final int maxLines;
-  final String? Function(String?)? validator;
-
-  const _Field({
-    required this.controller,
-    required this.label,
-    this.hint,
-    this.keyboardType,
-    this.maxLines = 1,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _field(
+    TextEditingController ctrl,
+    String label, {
+    int maxLines = 1,
+    TextInputType? keyboard,
+    bool required = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        _label(label),
         const SizedBox(height: 4),
         TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
+          controller: ctrl,
           maxLines: maxLines,
-          validator: validator,
-          decoration: InputDecoration(hintText: hint),
+          keyboardType: keyboard,
+          validator: required
+              ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
+              : null,
+          decoration: const InputDecoration(),
         ),
       ],
     );
   }
+
+  Widget _yesNoRow(String question, bool? value, ValueChanged<bool?> onChanged,
+      {String yesLabel = 'Yes', String noLabel = 'No'}) {
+    return Row(
+      children: [
+        Expanded(
+            child: Text(question, style: const TextStyle(fontSize: 13))),
+        const SizedBox(width: 8),
+        Row(children: [
+          Radio<bool>(
+              value: true, groupValue: value, onChanged: onChanged),
+          Text(yesLabel, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 8),
+          Radio<bool>(
+              value: false, groupValue: value, onChanged: onChanged),
+          Text(noLabel, style: const TextStyle(fontSize: 13)),
+        ]),
+      ],
+    );
+  }
 }
+
+// ── Signature pad ────────────────────────────────────────────────────────────
 
 class SignaturePad extends StatefulWidget {
   const SignaturePad({super.key});
@@ -423,43 +716,34 @@ class SignaturePad extends StatefulWidget {
 class SignaturePadState extends State<SignaturePad> {
   final List<List<Offset>> _strokes = [];
 
-  bool get hasSignature => _strokes.any((stroke) => stroke.length > 1);
+  bool get hasSignature => _strokes.any((s) => s.length > 1);
 
-  void _onPanStart(DragStartDetails details) {
-    setState(() => _strokes.add([details.localPosition]));
-  }
-
-  void _onPanUpdate(DragUpdateDetails details) {
-    setState(() {
-      if (_strokes.isEmpty) {
-        _strokes.add([details.localPosition]);
-      } else {
-        _strokes.last.add(details.localPosition);
-      }
-    });
-  }
-
-  void clear() {
-    setState(() => _strokes.clear());
-  }
+  void clear() => setState(() => _strokes.clear());
 
   Future<Uint8List> toImageBytes() async {
     if (!hasSignature) return Uint8List(0);
-
-    final width = context.size?.width ?? 320;
-    final height = context.size?.height ?? 160;
+    final w = context.size?.width ?? 320;
+    final h = context.size?.height ?? 160;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final painter = _SignaturePainter(_strokes);
-    painter.paint(canvas, Size(width, height));
-
+    _SignaturePainter(_strokes).paint(canvas, Size(w, h));
     final picture = recorder.endRecording();
-    final image = await picture.toImage(width.toInt(), height.toInt());
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final image = await picture.toImage(w.toInt(), h.toInt());
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
     picture.dispose();
-
-    return byteData?.buffer.asUint8List() ?? Uint8List(0);
+    return data?.buffer.asUint8List() ?? Uint8List(0);
   }
+
+  void _startStroke(DragStartDetails d) =>
+      setState(() => _strokes.add([d.localPosition]));
+
+  void _extendStroke(DragUpdateDetails d) => setState(() {
+        if (_strokes.isEmpty) {
+          _strokes.add([d.localPosition]);
+        } else {
+          _strokes.last.add(d.localPosition);
+        }
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -470,19 +754,22 @@ class SignaturePadState extends State<SignaturePad> {
           height: 160,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.grey.shade300),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
+            // Use separate V + H drag recognizers so the child wins the
+            // gesture arena against the parent SingleChildScrollView.
             child: GestureDetector(
-              onPanStart: _onPanStart,
-              onPanUpdate: _onPanUpdate,
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragStart: _startStroke,
+              onVerticalDragUpdate: _extendStroke,
+              onHorizontalDragStart: _startStroke,
+              onHorizontalDragUpdate: _extendStroke,
               child: CustomPaint(
                 painter: _SignaturePainter(_strokes),
-                child: Container(
-                  color: Colors.white,
-                ),
+                child: Container(color: Colors.white),
               ),
             ),
           ),
@@ -490,9 +777,7 @@ class SignaturePadState extends State<SignaturePad> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: clear,
-            child: const Text('Clear signature'),
-          ),
+              onPressed: clear, child: const Text('Clear')),
         ),
       ],
     );
@@ -501,7 +786,6 @@ class SignaturePadState extends State<SignaturePad> {
 
 class _SignaturePainter extends CustomPainter {
   final List<List<Offset>> strokes;
-
   _SignaturePainter(this.strokes);
 
   @override
@@ -511,7 +795,6 @@ class _SignaturePainter extends CustomPainter {
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-
     for (final stroke in strokes) {
       for (var i = 1; i < stroke.length; i++) {
         canvas.drawLine(stroke[i - 1], stroke[i], paint);
@@ -520,5 +803,5 @@ class _SignaturePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SignaturePainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SignaturePainter old) => true;
 }

@@ -32,6 +32,9 @@ class BookingProvider extends ChangeNotifier {
   }
   String? errorMessage;
   bool get isSignedIn => _calendarService.isSignedIn;
+  String? get userEmail => _calendarService.currentUserEmail;
+  dynamic get currentAccount => _calendarService.currentAccount;
+  Future<bool> requestApiScopes() => _calendarService.requestApiScopes();
 
   DateTime selectedDate = DateTime.now();
   int slotDurationMinutes = 90; // 60 or 90
@@ -58,7 +61,11 @@ class BookingProvider extends ChangeNotifier {
       await loadUpcoming();
       await loadCalendarEvents();
     } else {
-      _setStatus(BookingStatus.error, 'Sign-in failed. Please try again.');
+      final detail = _calendarService.lastSignInError;
+      final msg = detail != null
+          ? 'Sign-in failed: $detail'
+          : 'Sign-in failed. Please try again.';
+      _setStatus(BookingStatus.error, msg);
     }
     return ok;
   }
