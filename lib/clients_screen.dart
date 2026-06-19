@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'client_database.dart';
-import 'invoice_excel_service.dart';
+import 'booking_provider.dart';
+import 'client_registry_service.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -21,23 +25,66 @@ class _ClientsScreenState extends State<ClientsScreen> {
     _load();
   }
 
+  GoogleSignInAccount? get _account =>
+      context.read<BookingProvider>().currentAccount as GoogleSignInAccount?;
+
   Future<void> _load() async {
+    final account = _account;
+    if (account == null) {
+      setState(() { _clients = []; _loading = false; });
+      return;
+    }
     setState(() => _loading = true);
-    final clients = await ClientDatabase.loadAll();
+    final clients = await ClientRegistryService.getAllWithSessions(account);
     clients.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     if (mounted) setState(() { _clients = clients; _loading = false; });
-  }
-
-  Future<void> _syncExcel() async {
-    await InvoiceExcelService.syncClientsSheet(_clients);
   }
 
   Future<void> _exportExcel() async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final file = await InvoiceExcelService.workingFile;
+      final excel = Excel.createExcel();
+      final sheet = excel['Clients'];
+      excel.setDefaultSheet('Clients');
+      sheet.appendRow([
+        TextCellValue('Client ID'),
+        TextCellValue('Name'),
+        TextCellValue('Email'),
+        TextCellValue('Phone'),
+        TextCellValue('Month Key'),
+        TextCellValue('Client No'),
+        TextCellValue('Total Sessions'),
+        TextCellValue('Last Invoice'),
+        TextCellValue('Last Date'),
+        TextCellValue('Fee'),
+        TextCellValue('Less CHS1'),
+      ]);
+      final dateFmt = DateFormat('dd/MM/yyyy');
+      for (final client in _clients) {
+        final last = client.sessions.isNotEmpty ? client.sessions.last : null;
+        sheet.appendRow([
+          TextCellValue(client.clientId),
+          TextCellValue(client.name),
+          TextCellValue(client.email),
+          TextCellValue(client.phone),
+          TextCellValue(client.monthKey),
+          IntCellValue(client.clientNumber),
+          IntCellValue(client.sessionCount),
+          TextCellValue(last?.invoiceNumber ?? ''),
+          TextCellValue(last != null ? dateFmt.format(last.sessionDate) : ''),
+          DoubleCellValue(last?.fee ?? 0),
+          DoubleCellValue(last?.lessCHS1 ?? 0),
+        ]);
+      }
+      final bytes = Uint8List.fromList(excel.encode()!);
       await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')],
+        [
+          XFile.fromData(
+            bytes,
+            name: 'MBP Client Database.xlsx',
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          ),
+        ],
         subject: 'MBP Client Database',
       );
     } catch (e) {
@@ -51,14 +98,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
         builder: (_) => ClientDetailScreen(
           initialClient: client,
           onUpdate: (clientId, {String? name, String? phone}) async {
-            await ClientDatabase.updateClient(clientId, name: name, phone: phone);
+            final account = _account;
+            if (account == null) return;
+            await ClientRegistryService.updateClient(account, clientId, name: name, phone: phone);
             await _load();
-            await _syncExcel();
           },
           onDeleteSession: (clientId, invoiceNumber) async {
-            await ClientDatabase.deleteSession(clientId, invoiceNumber);
+            final account = _account;
+            if (account == null) return;
+            await ClientRegistryService.deleteSession(account, clientId, invoiceNumber);
             await _load();
-            await _syncExcel();
           },
         ),
       ),
@@ -95,13 +144,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await ClientDatabase.updateClient(
+              final account = _account;
+              if (account == null) return;
+              await ClientRegistryService.updateClient(
+                account,
                 client.clientId,
                 name: nameCtrl.text.trim(),
                 phone: phoneCtrl.text.trim(),
               );
               await _load();
-              await _syncExcel();
             },
             child: const Text('Save'),
           ),
@@ -128,9 +179,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
             onPressed: () async {
               Navigator.pop(ctx);
-              await ClientDatabase.deleteClient(client.clientId);
+              final account = _account;
+              if (account == null) return;
+              await ClientRegistryService.deleteClient(account, client.clientId);
               await _load();
-              await _syncExcel();
             },
             child: const Text('Delete'),
           ),
@@ -141,6 +193,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   void _showAddDialog() {
     final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     showDialog(
       context: context,
@@ -157,6 +210,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: emailCtrl,
+              decoration: const InputDecoration(labelText: 'Email', hintText: 'jane@example.com'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 12),
+            TextField(
               controller: phoneCtrl,
               decoration: const InputDecoration(labelText: 'Phone', hintText: '+91 98765 43210'),
               keyboardType: TextInputType.phone,
@@ -168,17 +227,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ElevatedButton(
             onPressed: () async {
               final name = nameCtrl.text.trim();
+              final email = emailCtrl.text.trim();
               final phone = phoneCtrl.text.trim();
-              if (name.isEmpty || phone.isEmpty) return;
+              if (name.isEmpty || email.isEmpty) return;
+              final account = _account;
+              if (account == null) return;
               Navigator.pop(ctx);
               try {
-                await ClientDatabase.addManualClient(
+                await ClientRegistryService.findOrCreateClient(
+                  account,
                   name: name,
+                  email: email,
                   phone: phone,
                   referenceDate: DateTime.now(),
                 );
                 await _load();
-                await _syncExcel();
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -421,7 +484,10 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
   }
 
   Future<void> _reload() async {
-    final all = await ClientDatabase.loadAll();
+    final account =
+        context.read<BookingProvider>().currentAccount as GoogleSignInAccount?;
+    if (account == null) return;
+    final all = await ClientRegistryService.getAllWithSessions(account);
     final updated = all.firstWhere(
       (c) => c.clientId == _client.clientId,
       orElse: () => _client,

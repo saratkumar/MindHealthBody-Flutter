@@ -17,8 +17,9 @@ class IntakeFormService {
   static Future<void> generateAndSend(
     IntakeForm form, {
     GoogleSignInAccount? account,
+    String? clientId,
   }) async {
-    final bytes = await _buildPdf(form);
+    final bytes = await _buildPdf(form, clientId: clientId);
     final stamp = DateFormat('ddMMyyyy_HHmm').format(form.submittedAt);
     final safe = _safe(form.patientName);
     final filename = '$safe Intake Form $stamp.pdf';
@@ -40,7 +41,7 @@ class IntakeFormService {
     }
   }
 
-  static Future<Uint8List> _buildPdf(IntakeForm form) async {
+  static Future<Uint8List> _buildPdf(IntakeForm form, {String? clientId}) async {
     final doc = pw.Document();
     final sig1 = form.signatureBytes.isNotEmpty ? pw.MemoryImage(form.signatureBytes) : null;
     final sig2 = form.signature2Bytes.isNotEmpty ? pw.MemoryImage(form.signature2Bytes) : null;
@@ -98,7 +99,10 @@ class IntakeFormService {
             padding: const pw.EdgeInsets.all(4),
             decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey400)),
             child: pw.Row(children: [
-              pw.Text('[Official use – Patient ID: ________________  MHP ID No: ________]',
+              pw.Text(
+                  clientId != null
+                      ? 'Client ID: $clientId'
+                      : '[Official use – Patient ID: ________________  MHP ID No: ________]',
                   style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
             ]),
           ),

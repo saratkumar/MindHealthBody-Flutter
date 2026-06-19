@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'aoq_form_screen.dart';
+import 'appointment_request_screen.dart';
 import 'booking_provider.dart';
 import 'intake_form_screen.dart';
 import 'psa_form_screen.dart';
@@ -138,6 +139,19 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
                           _checkIntakeStatus();
                         },
                 ),
+
+              const SizedBox(height: 12),
+
+              // ── Request an Appointment ───────────────────────────────────────
+              _MenuCard(
+                icon: Icons.calendar_month_outlined,
+                title: 'Request an Appointment',
+                subtitle: 'Pick a date & time — your practitioner will contact you to confirm',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AppointmentRequestScreen()),
+                ),
+              ),
 
               const SizedBox(height: 12),
 

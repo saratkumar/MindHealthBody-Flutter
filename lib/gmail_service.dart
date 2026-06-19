@@ -68,6 +68,118 @@ class GmailService {
     );
   }
 
+  // ── Plain-text notification emails ──────────────────────────────────────────
+
+  static Future<void> sendUserRequestNotification({
+    required GoogleSignInAccount account,
+    required List<String> adminEmails,
+    required String requesterName,
+    required String requesterEmail,
+    required String newUserName,
+    required String newUserEmail,
+    required String newUserPhone,
+    required String newUserRole,
+    required String note,
+  }) async {
+    if (adminEmails.isEmpty) return;
+    await _sendPlainText(
+      account: account,
+      to: adminEmails.join(', '),
+      subject: 'New user request – $newUserName ($newUserRole)',
+      body: 'Dear Admin,\r\n\r\n'
+          '$requesterName ($requesterEmail) has requested a new user be added to BookMe:\r\n\r\n'
+          'Name: $newUserName\r\n'
+          'Email: $newUserEmail\r\n'
+          'Phone: $newUserPhone\r\n'
+          'Role: $newUserRole\r\n'
+          'Note: ${note.isEmpty ? '(none)' : note}\r\n\r\n'
+          'Please review and approve/reject this request in the Requests tab.\r\n\r\n'
+          'Regards,\r\n'
+          '$requesterName',
+    );
+  }
+
+  static Future<void> sendRequestApprovedEmail({
+    required GoogleSignInAccount account,
+    required String practitionerEmail,
+    required String practitionerName,
+    required String newUserName,
+    required String newUserRole,
+  }) async {
+    await _sendPlainText(
+      account: account,
+      to: practitionerEmail,
+      subject: 'Request approved – $newUserName',
+      body: 'Dear $practitionerName,\r\n\r\n'
+          'Your request to add $newUserName as a $newUserRole has been approved.\r\n\r\n'
+          'Regards,\r\n'
+          'The MindBody Practice',
+    );
+  }
+
+  static Future<void> sendEnrollmentEmail({
+    required GoogleSignInAccount account,
+    required String newUserEmail,
+    required String newUserName,
+  }) async {
+    await _sendPlainText(
+      account: account,
+      to: newUserEmail,
+      subject: 'You are enrolled into the system',
+      body: 'Dear $newUserName,\r\n\r\n'
+          'You have been enrolled into The MindBody Practice booking system. '
+          'You can now sign in with this Google account.\r\n\r\n'
+          'Regards,\r\n'
+          'The MindBody Practice',
+    );
+  }
+
+  static Future<void> sendAppointmentRequestEmail({
+    required GoogleSignInAccount account,
+    required String practitionerEmail,
+    required String practitionerName,
+    required String clientName,
+    required String clientEmail,
+    required String clientPhone,
+    required DateTime requestedStart,
+    required DateTime requestedEnd,
+    String? notes,
+  }) async {
+    final fmt = DateFormat('EEE, d MMM yyyy h:mm a');
+    await _sendPlainText(
+      account: account,
+      to: practitionerEmail,
+      subject: 'Appointment request – $clientName',
+      body: 'Dear $practitionerName,\r\n\r\n'
+          '$clientName has requested an appointment:\r\n\r\n'
+          'Requested time: ${fmt.format(requestedStart)} – ${DateFormat('h:mm a').format(requestedEnd)}\r\n'
+          'Client email: $clientEmail\r\n'
+          'Client phone: $clientPhone\r\n'
+          '${notes != null && notes.isNotEmpty ? 'Notes: $notes\r\n' : ''}\r\n'
+          'Please contact the client directly to confirm.\r\n\r\n'
+          'Regards,\r\n'
+          '$clientName',
+    );
+  }
+
+  static Future<void> _sendPlainText({
+    required GoogleSignInAccount account,
+    required String to,
+    required String subject,
+    required String body,
+  }) async {
+    final api = gmail.GmailApi(_GmailAuthClient(account));
+    final mime = 'MIME-Version: 1.0\r\n'
+        'From: ${account.email}\r\n'
+        'To: $to\r\n'
+        'Subject: $subject\r\n'
+        'Content-Type: text/plain; charset="UTF-8"\r\n'
+        '\r\n'
+        '$body';
+    final raw = base64Url.encode(utf8.encode(mime)).replaceAll('=', '');
+    await api.users.messages.send(gmail.Message(raw: raw), 'me');
+  }
+
   static String _wrapBase64(String s) {
     const w = 76;
     final buf = StringBuffer();

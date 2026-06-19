@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'booking_provider.dart';
+import 'client_registry_service.dart';
 import 'intake_form.dart';
 import 'intake_form_service.dart';
 import 'sheets_service.dart';
@@ -158,6 +159,23 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
 
       final practitioner = _selectedPractitioner ?? _practitioners.first;
       final now = DateTime.now();
+
+      // Assign (or look up) the client's permanent MBP ID right at intake,
+      // so it's already in the shared registry by the time invoicing happens.
+      String? clientId;
+      if (account != null) {
+        try {
+          final client = await ClientRegistryService.findOrCreateClient(
+            account,
+            name: _nameCtrl.text.trim(),
+            email: _emailCtrl.text.trim(),
+            phone: _phoneCtrl.text.trim(),
+            referenceDate: now,
+          );
+          clientId = client.clientId;
+        } catch (_) {}
+      }
+
       final form = IntakeForm(
         patientName: _nameCtrl.text.trim(),
         nricId: _nricCtrl.text.trim(),
@@ -198,7 +216,11 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
         practitionerName: practitioner.name,
       );
 
-      await IntakeFormService.generateAndSend(form, account: account);
+      await IntakeFormService.generateAndSend(
+        form,
+        account: account,
+        clientId: clientId,
+      );
 
       // Mark as submitted locally and in Google Sheets (best-effort)
       final email = provider.userEmail ?? '';
@@ -244,6 +266,12 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                     Text('A copy was also sent to your email.',
                         style: TextStyle(
                             fontSize: 12, color: Colors.grey.shade600)),
+                    if (clientId != null) ...[
+                      const SizedBox(height: 10),
+                      Text('Your Client ID: $clientId',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
                   ]
                 : [
                     const Text('Your intake form PDF has been downloaded.'),

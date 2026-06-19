@@ -158,10 +158,17 @@ class _UserTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPractitioner = user.role == 'practitioner';
-    final roleColor =
-        isPractitioner ? const Color(0xFFD93025) : const Color(0xFF1A73E8);
-    final roleBg =
-        isPractitioner ? const Color(0xFFFCE8E6) : const Color(0xFFE8F0FE);
+    final isAdmin = user.role == 'admin';
+    final roleColor = isAdmin
+        ? const Color(0xFF9334E6)
+        : isPractitioner
+            ? const Color(0xFFD93025)
+            : const Color(0xFF1A73E8);
+    final roleBg = isAdmin
+        ? const Color(0xFFF3E8FD)
+        : isPractitioner
+            ? const Color(0xFFFCE8E6)
+            : const Color(0xFFE8F0FE);
 
     return Card(
       child: Padding(
@@ -171,7 +178,11 @@ class _UserTile extends StatelessWidget {
             CircleAvatar(
               backgroundColor: roleBg,
               child: Icon(
-                isPractitioner ? Icons.medical_services : Icons.person,
+                isAdmin
+                    ? Icons.admin_panel_settings
+                    : isPractitioner
+                        ? Icons.medical_services
+                        : Icons.person,
                 color: roleColor,
                 size: 20,
               ),
@@ -201,7 +212,11 @@ class _UserTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          isPractitioner ? 'Practitioner' : 'Client',
+                          isAdmin
+                              ? 'Admin'
+                              : isPractitioner
+                                  ? 'Practitioner'
+                                  : 'Client',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -370,6 +385,11 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                   value: 'practitioner',
                   label: Text('Practitioner'),
                   icon: Icon(Icons.medical_services_outlined),
+                ),
+                ButtonSegment(
+                  value: 'admin',
+                  label: Text('Admin'),
+                  icon: Icon(Icons.admin_panel_settings_outlined),
                 ),
               ],
               selected: {_role},

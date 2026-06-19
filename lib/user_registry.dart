@@ -45,4 +45,9 @@ class UserRegistryService {
     final all = await getAll();
     return all.where((u) => u.role == 'practitioner').toList();
   }
+
+  static Future<List<AppUser>> getAdmins() async {
+    final all = await getAll();
+    return all.where((u) => u.role == 'admin').toList();
+  }
 }

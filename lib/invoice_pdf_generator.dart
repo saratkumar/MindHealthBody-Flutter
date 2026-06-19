@@ -1,8 +1,7 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 
 class InvoiceItem {
@@ -23,7 +22,9 @@ class InvoiceItem {
 class InvoicePdfGenerator {
   static final _numFmt = NumberFormat('#,##0.00', 'en_SG');
 
-  static Future<File> generate({
+  /// Returns the rendered invoice PDF as bytes (no file-system access, so
+  /// this works on every platform including Flutter Web).
+  static Future<Uint8List> generate({
     required String invoiceNumber,
     required DateTime invoiceDate,
     required String clientName,
@@ -58,12 +59,14 @@ class InvoicePdfGenerator {
       ),
     );
 
-    final dir = await getApplicationDocumentsDirectory();
+    return pdf.save();
+  }
+
+  /// Filename to use when sharing/downloading the generated invoice PDF.
+  static String filename(String clientName, DateTime invoiceDate) {
     final tag = DateFormat('ddMMyy').format(invoiceDate);
     final safe = clientName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '').trim();
-    final file = File('${dir.path}/MBP Invoice - $safe $tag.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
+    return 'MBP Invoice - $safe $tag.pdf';
   }
 
   static pw.Widget _buildPage({

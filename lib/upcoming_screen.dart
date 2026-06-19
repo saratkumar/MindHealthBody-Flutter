@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'booking_provider.dart';
 import 'booking.dart';
 import 'whatsapp_service.dart';
-import 'client_database.dart';
+import 'client_registry_service.dart';
 import 'invoice_pdf_generator.dart';
 import 'invoice_excel_service.dart';
 
@@ -115,6 +116,16 @@ Future<void> _generateAndShare(
 }) async {
   final total = items.fold<double>(0, (s, i) => s + i.amount);
   final messenger = ScaffoldMessenger.of(context);
+  final account =
+      context.read<BookingProvider>().currentAccount as GoogleSignInAccount?;
+
+  if (account == null) {
+    messenger.showSnackBar(const SnackBar(
+      content: Text('Sign in with Google to generate invoices'),
+    ));
+    return;
+  }
+
   final loadingBar = messenger.showSnackBar(
     const SnackBar(
       duration: Duration(minutes: 1),
@@ -133,28 +144,27 @@ Future<void> _generateAndShare(
   );
 
   try {
-    final (client, invoiceNumber) = await ClientDatabase.recordSession(
+    final (client, invoiceNumber) = await ClientRegistryService.recordSession(
+      account,
       name: booking.guestName,
+      email: booking.guestEmail,
       phone: booking.guestPhone,
       sessionDate: booking.startTime,
       fee: total,
       lessCHS1: 0,
     );
 
-    await InvoiceExcelService.writeInvoice(
+    final excelBytes = await InvoiceExcelService.writeInvoice(
       invoiceNumber: invoiceNumber,
       sessionDate: booking.startTime,
       clientId: client.clientId,
       clientName: booking.guestName,
       clientPhone: booking.guestPhone,
-      monthKey: client.monthKey,
-      clientNumber: client.clientNumber,
-      totalSessions: client.sessionCount,
       fee: total,
       lessCHS1: 0,
     );
 
-    final pdfFile = await InvoicePdfGenerator.generate(
+    final pdfBytes = await InvoicePdfGenerator.generate(
       invoiceNumber: invoiceNumber,
       invoiceDate: booking.startTime,
       clientName: booking.guestName,
@@ -166,7 +176,18 @@ Future<void> _generateAndShare(
     loadingBar.close();
 
     await Share.shareXFiles(
-      [XFile(pdfFile.path, mimeType: 'application/pdf')],
+      [
+        XFile.fromData(
+          pdfBytes,
+          name: InvoicePdfGenerator.filename(booking.guestName, booking.startTime),
+          mimeType: 'application/pdf',
+        ),
+        XFile.fromData(
+          excelBytes,
+          name: InvoiceExcelService.filename(booking.guestName, booking.startTime),
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ),
+      ],
       subject: 'Invoice $invoiceNumber — ${booking.guestName}',
       text: 'Hi ${booking.guestName}, please find your invoice attached.',
     );

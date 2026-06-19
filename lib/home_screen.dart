@@ -8,8 +8,10 @@ import 'calendar_events_screen.dart';
 import 'clients_screen.dart';
 import 'client_menu_screen.dart';
 import 'admin_login_screen.dart';
+import 'admin_requests_screen.dart';
 import 'uam_screen.dart';
 import 'user_registry.dart';
+import 'user_request_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -88,7 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       setState(() {
         _checkingRegistry = false;
-        _role = user.role == 'client' ? _UserRole.client : _UserRole.practitioner;
+        _role = switch (user.role) {
+          'client' => _UserRole.client,
+          'admin' => _UserRole.admin,
+          _ => _UserRole.practitioner,
+        };
         _authError = null;
       });
     }
@@ -175,6 +181,15 @@ class _HomeScreenState extends State<HomeScreen> {
       return const ClientMenuScreen();
     }
 
+    // ── Admin (Google) ───────────────────────────────────────────
+    if (_role == _UserRole.admin) {
+      return _AdminScaffold(
+        selectedIndex: _selectedIndex,
+        onIndexChanged: (i) => setState(() => _selectedIndex = i),
+        onSignOut: () => provider.signOut(),
+      );
+    }
+
     // ── Practitioner (Google) ────────────────────────────────────
     return _PractitionerScaffold(
       selectedIndex: _selectedIndex,
@@ -187,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
 // Role enum (internal to this file)
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum _UserRole { client, practitioner }
+enum _UserRole { client, practitioner, admin }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin scaffold — 6 tabs (all practitioner tabs + Users/UAM)
@@ -216,6 +231,7 @@ class _AdminScaffold extends StatelessWidget {
           const HistoryScreen(),
           const ClientsScreen(),
           UamScreen(onSignOut: onSignOut),
+          const AdminRequestsScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -251,6 +267,11 @@ class _AdminScaffold extends StatelessWidget {
             icon: Icon(Icons.manage_accounts_outlined),
             selectedIcon: Icon(Icons.manage_accounts),
             label: 'Users',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inbox_outlined),
+            selectedIcon: Icon(Icons.inbox),
+            label: 'Requests',
           ),
         ],
       ),
@@ -386,6 +407,17 @@ class _AccountTab extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
             ),
             const Spacer(),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const UserRequestScreen()),
+              ),
+              icon: const Icon(Icons.person_add_outlined),
+              label: const Text('Request New User'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: onSignOut,
               icon: const Icon(Icons.logout_outlined),
