@@ -32,7 +32,7 @@ class CalendarService {
   static final _roomPattern = RegExp(r'\b(R[1-4])\b', caseSensitive: false);
 
   static const _webClientId =
-      '383887707617-30hj9t9l64h5omhegmu6j08fjddkhums.apps.googleusercontent.com';
+      '888992578709-s5ilvj4hj28eqf81iohbj2nq6e9pahta.apps.googleusercontent.com';
 
   final _googleSignIn = GoogleSignIn(
     scopes: _scopes,

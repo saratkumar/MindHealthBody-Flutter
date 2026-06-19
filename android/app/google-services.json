@@ -1,45 +1,52 @@
 {
   "project_info": {
-    "project_number": "433205296996",
-    "project_id": "bookme-e1f35",
-    "storage_bucket": "bookme-e1f35.firebasestorage.app"
+    "project_number": "888992578709",
+    "project_id": "mbpractice-2d7d3",
+    "storage_bucket": "mbpractice-2d7d3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:433205296996:android:b7b6eda7ab24ba65384471",
-        "android_client_info": {
-          "package_name": "com.example.bookme"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAYNH35k33hFjYD09E9K1kGZoK7dUhOeC0"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:433205296996:android:42007e9d8dd787ec384471",
+        "mobilesdk_app_id": "1:888992578709:android:ce3160c2243070b90cef9c",
         "android_client_info": {
           "package_name": "sg.psychologyclinic.bookme"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "888992578709-4jq91c5t779nsj9fur0q2rjqdk9mavk6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "sg.psychologyclinic.bookme",
+            "certificate_hash": "1ae654f1e29e0d602386383c7dd90d5020bafea2"
+          }
+        },
+        {
+          "client_id": "888992578709-bilkh938keqjprtl1jdri1sq81kbi4g5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "sg.psychologyclinic.bookme",
+            "certificate_hash": "766830509bbd13cea2206c8d0a4ebcdf8717847f"
+          }
+        },
+        {
+          "client_id": "888992578709-s5ilvj4hj28eqf81iohbj2nq6e9pahta.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAYNH35k33hFjYD09E9K1kGZoK7dUhOeC0"
+          "current_key": "AIzaSyB1bvFx6BnQPW4K4TpAQoJjr00MymiRGFs"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "888992578709-s5ilvj4hj28eqf81iohbj2nq6e9pahta.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
