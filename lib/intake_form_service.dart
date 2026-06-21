@@ -8,8 +8,8 @@ import 'download_helper.dart';
 import 'gmail_service.dart';
 import 'intake_form.dart';
 
-// R=0x1A G=0x4B B=0x8C → brand navy blue
-const _kBrandBlue = PdfColor(0x1A / 255, 0x4B / 255, 0x8C / 255);
+// R=0x1D G=0x49 B=0xA7 → sampled from the MindBody Practice logo
+const _kBrandBlue = PdfColor(0x1D / 255, 0x49 / 255, 0xA7 / 255);
 
 class IntakeFormService {
   /// Sends the PDF by email (to practitioner + CC client) when a Google

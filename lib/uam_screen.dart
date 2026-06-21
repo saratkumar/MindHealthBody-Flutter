@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'user_registry.dart';
 
@@ -163,7 +163,7 @@ class _UserTile extends StatelessWidget {
         ? const Color(0xFF9334E6)
         : isPractitioner
             ? const Color(0xFFD93025)
-            : const Color(0xFF1A73E8);
+            : const Color(0xFF1D49A7);
     final roleBg = isAdmin
         ? const Color(0xFFF3E8FD)
         : isPractitioner

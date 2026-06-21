@@ -177,38 +177,38 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  /// Client-initiated appointment request: emails the practitioner with the
-  /// requested slot. Does not write to Calendar or send WhatsApp — the
-  /// practitioner follows up with the client directly.
-  Future<bool> requestAppointment({
+  /// Client-initiated appointment reservation: client freely picks their
+  /// preferred date/time (no calendar-availability check) and this emails
+  /// the practitioner directly. Does not write to Calendar or send WhatsApp —
+  /// the practitioner follows up with the client to confirm.
+  Future<bool> reserveAppointment({
     required String practitionerEmail,
     required String practitionerName,
     required String clientName,
     required String clientEmail,
     required String clientPhone,
+    required DateTime preferredStart,
     String? notes,
   }) async {
-    if (selectedSlot == null) return false;
     final account = _calendarService.currentAccount;
     if (account == null) return false;
 
     _setStatus(BookingStatus.loading);
     try {
-      await GmailService.sendAppointmentRequestEmail(
+      await GmailService.sendAppointmentReservationEmail(
         account: account,
         practitionerEmail: practitionerEmail,
         practitionerName: practitionerName,
         clientName: clientName,
         clientEmail: clientEmail,
         clientPhone: clientPhone,
-        requestedStart: selectedSlot!.start,
-        requestedEnd: selectedSlot!.end,
+        preferredStart: preferredStart,
         notes: notes,
       );
       _setStatus(BookingStatus.success);
       return true;
     } catch (e) {
-      _setStatus(BookingStatus.error, 'Request failed: $e');
+      _setStatus(BookingStatus.error, 'Reservation failed: $e');
       return false;
     }
   }

@@ -1,5 +1,5 @@
-import 'dart:typed_data';
-import 'package:excel/excel.dart';
+﻿import 'dart:typed_data';
+import 'package:excel/excel.dart' hide Border, BorderStyle, TextSpan;
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
@@ -306,7 +306,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 }
 
-// ── Client list card ──────────────────────────────────────────────────────────
+// â”€â”€ Client list card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ClientCard extends StatelessWidget {
   final ClientRecord client;
@@ -347,7 +347,7 @@ class _ClientCard extends StatelessWidget {
                     child: Text(
                       client.name.isNotEmpty ? client.name[0].toUpperCase() : '?',
                       style: const TextStyle(
-                        color: Color(0xFF1A73E8),
+                        color: Color(0xFF1D49A7),
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -390,7 +390,7 @@ class _ClientCard extends StatelessWidget {
               // Row 2: client ID + sessions + last invoice
               Row(
                 children: [
-                  _Chip(label: client.clientId, color: const Color(0xFF1A73E8)),
+                  _Chip(label: client.clientId, color: const Color(0xFF1D49A7)),
                   const SizedBox(width: 8),
                   _Chip(
                     label: '${client.sessionCount} session${client.sessionCount == 1 ? '' : 's'}',
@@ -406,7 +406,7 @@ class _ClientCard extends StatelessWidget {
                     Icon(Icons.receipt_long_outlined, size: 13, color: Colors.grey.shade400),
                     const SizedBox(width: 4),
                     Text(
-                      'Last: ${last.invoiceNumber}  ·  ${_dateFmt.format(last.sessionDate)}  ·  ₹${_currFmt.format(last.fee - last.lessCHS1)}',
+                      'Last: ${last.invoiceNumber}  Â·  ${_dateFmt.format(last.sessionDate)}  Â·  â‚¹${_currFmt.format(last.fee - last.lessCHS1)}',
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                   ],
@@ -453,7 +453,7 @@ class _Chip extends StatelessWidget {
   }
 }
 
-// ── Detail screen ─────────────────────────────────────────────────────────────
+// â”€â”€ Detail screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class ClientDetailScreen extends StatefulWidget {
   final ClientRecord initialClient;
@@ -581,7 +581,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Profile card ──
+          // â”€â”€ Profile card â”€â”€
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -596,7 +596,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                         child: Text(
                           _client.name.isNotEmpty ? _client.name[0].toUpperCase() : '?',
                           style: const TextStyle(
-                            color: Color(0xFF1A73E8),
+                            color: Color(0xFF1D49A7),
                             fontWeight: FontWeight.bold,
                             fontSize: 22,
                           ),
@@ -632,7 +632,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
 
           const SizedBox(height: 12),
 
-          // ── Stats row ──
+          // â”€â”€ Stats row â”€â”€
           Row(
             children: [
               Expanded(
@@ -646,7 +646,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
               Expanded(
                 child: _StatCard(
                   label: 'Total Revenue',
-                  value: '₹${_currFmt.format(totalRevenue)}',
+                  value: 'â‚¹${_currFmt.format(totalRevenue)}',
                   icon: Icons.currency_rupee,
                 ),
               ),
@@ -655,7 +655,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
 
           const SizedBox(height: 20),
 
-          // ── Invoice history header ──
+          // â”€â”€ Invoice history header â”€â”€
           const Text('Invoice History',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
@@ -709,7 +709,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                             style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF1A73E8))),
+                                color: Color(0xFF1D49A7))),
                       ),
                       Expanded(
                         flex: 2,
@@ -719,7 +719,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                       ),
                       Expanded(
                         flex: 2,
-                        child: Text('₹${_currFmt.format(s.fee)}',
+                        child: Text('â‚¹${_currFmt.format(s.fee)}',
                             textAlign: TextAlign.right,
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey.shade700)),
@@ -727,7 +727,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          s.lessCHS1 > 0 ? '−₹${_currFmt.format(s.lessCHS1)}' : '—',
+                          s.lessCHS1 > 0 ? 'âˆ’â‚¹${_currFmt.format(s.lessCHS1)}' : 'â€”',
                           textAlign: TextAlign.right,
                           style: TextStyle(
                               fontSize: 12,
@@ -738,7 +738,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                       ),
                       Expanded(
                         flex: 2,
-                        child: Text('₹${_currFmt.format(total)}',
+                        child: Text('â‚¹${_currFmt.format(total)}',
                             textAlign: TextAlign.right,
                             style: const TextStyle(
                                 fontSize: 12, fontWeight: FontWeight.w600)),
@@ -766,7 +766,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
   }
 }
 
-// ── Small widgets ─────────────────────────────────────────────────────────────
+// â”€â”€ Small widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _DetailRow extends StatelessWidget {
   final String label;
@@ -805,7 +805,7 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 18, color: const Color(0xFF1A73E8)),
+            Icon(icon, size: 18, color: const Color(0xFF1D49A7)),
             const SizedBox(height: 6),
             Text(value,
                 style: const TextStyle(
@@ -833,7 +833,7 @@ class _ColHeader extends StatelessWidget {
       style: const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF1A73E8),
+        color: Color(0xFF1D49A7),
       ),
     );
   }

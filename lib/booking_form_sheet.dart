@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'booking_provider.dart';
@@ -103,16 +103,16 @@ class _BookingFormSheetState extends State<BookingFormSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 16, color: Color(0xFF1A73E8)),
+                  const Icon(Icons.calendar_today, size: 16, color: Color(0xFF1D49A7)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${DateFormat("EEE, d MMM").format(slot.start)}  ·  '
-                      '${DateFormat("h:mm a").format(slot.start)} – ${DateFormat("h:mm a").format(slot.end)}',
+                      '${DateFormat("EEE, d MMM").format(slot.start)}  Â·  '
+                      '${DateFormat("h:mm a").format(slot.start)} â€“ ${DateFormat("h:mm a").format(slot.end)}',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF1A73E8),
+                        color: Color(0xFF1D49A7),
                       ),
                     ),
                   ),
@@ -126,7 +126,7 @@ class _BookingFormSheetState extends State<BookingFormSheet> {
                       ),
                       child: Text(
                         provider.selectedRoom!,
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF1A73E8)),
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF1D49A7)),
                       ),
                     ),
                 ],
@@ -219,7 +219,7 @@ class _BookingFormSheetState extends State<BookingFormSheet> {
               ),
               child: Row(
                 children: [
-                  const _NotifBadge(icon: Icons.calendar_month, color: Color(0xFF1A73E8), label: 'Calendar invite'),
+                  const _NotifBadge(icon: Icons.calendar_month, color: Color(0xFF1D49A7), label: 'Calendar invite'),
                   const SizedBox(width: 8),
                   Container(width: 1, height: 28, color: Colors.grey.shade200),
                   const SizedBox(width: 8),

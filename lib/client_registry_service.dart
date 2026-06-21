@@ -75,6 +75,33 @@ class ClientRegistryService {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
+  /// Looks up a client by email only — never creates a row. Used to autofill
+  /// an existing Client ID (e.g. on the intake form) without minting a new
+  /// permanent ID for someone who hasn't submitted anything yet.
+  static Future<ClientRecord?> findByEmail(
+    GoogleSignInAccount account,
+    String email,
+  ) async {
+    final api = await _api(account);
+    await _ensureSheet(api, _clientsSheet, _clientsHeaders);
+    final rows = await _readRows(api, _clientsSheet, _clientsHeaders.length);
+    final norm = _normalizeEmail(email);
+
+    for (final row in rows) {
+      if (_normalizeEmail(row[2]) == norm) {
+        return ClientRecord(
+          clientId: row[0],
+          name: row[1],
+          email: row[2],
+          phone: row[3],
+          monthKey: row[4],
+          clientNumber: int.tryParse(row[5]) ?? 0,
+        );
+      }
+    }
+    return null;
+  }
+
   /// Looks up a client by email, creating one (with a fresh MBP ID) if none
   /// exists yet. Does not record a session.
   static Future<ClientRecord> findOrCreateClient(

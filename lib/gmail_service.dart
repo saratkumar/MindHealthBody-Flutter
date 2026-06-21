@@ -134,29 +134,28 @@ class GmailService {
     );
   }
 
-  static Future<void> sendAppointmentRequestEmail({
+  static Future<void> sendAppointmentReservationEmail({
     required GoogleSignInAccount account,
     required String practitionerEmail,
     required String practitionerName,
     required String clientName,
     required String clientEmail,
     required String clientPhone,
-    required DateTime requestedStart,
-    required DateTime requestedEnd,
+    required DateTime preferredStart,
     String? notes,
   }) async {
     final fmt = DateFormat('EEE, d MMM yyyy h:mm a');
     await _sendPlainText(
       account: account,
       to: practitionerEmail,
-      subject: 'Appointment request – $clientName',
+      subject: 'Appointment reservation – $clientName',
       body: 'Dear $practitionerName,\r\n\r\n'
-          '$clientName has requested an appointment:\r\n\r\n'
-          'Requested time: ${fmt.format(requestedStart)} – ${DateFormat('h:mm a').format(requestedEnd)}\r\n'
+          '$clientName has reserved an appointment with you:\r\n\r\n'
+          'Preferred time: ${fmt.format(preferredStart)}\r\n'
           'Client email: $clientEmail\r\n'
           'Client phone: $clientPhone\r\n'
           '${notes != null && notes.isNotEmpty ? 'Notes: $notes\r\n' : ''}\r\n'
-          'Please contact the client directly to confirm.\r\n\r\n'
+          'Please contact the client directly to confirm or adjust the time.\r\n\r\n'
           'Regards,\r\n'
           '$clientName',
     );

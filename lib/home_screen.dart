@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'booking_provider.dart';
 import 'book_screen.dart';
 import 'upcoming_screen.dart';
-import 'history_screen.dart';
-import 'calendar_events_screen.dart';
 import 'clients_screen.dart';
 import 'client_menu_screen.dart';
 import 'admin_login_screen.dart';
@@ -120,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<BookingProvider>();
 
-    // ── Admin mode ──────────────────────────────────────────────
+    // â”€â”€ Admin mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (_isAdmin) {
       return _AdminScaffold(
         selectedIndex: _selectedIndex,
@@ -129,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // ── Test account (static bypass) ─────────────────────────────
+    // â”€â”€ Test account (static bypass) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (_testRole == _UserRole.client) {
       return ClientMenuScreen(onSignOut: _exitTestRole);
     }
@@ -141,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // ── Not signed in ────────────────────────────────────────────
+    // â”€â”€ Not signed in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (!provider.isSignedIn) {
       return _SignInPage(
         isLoading: provider.status == BookingStatus.loading || _checkingRegistry,
@@ -160,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // ── Checking registry ─────────────────────────────────────────
+    // â”€â”€ Checking registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (_checkingRegistry || _role == null) {
       return const Scaffold(
         body: Center(
@@ -169,19 +167,19 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text('Verifying your access…'),
+              Text('Verifying your accessâ€¦'),
             ],
           ),
         ),
       );
     }
 
-    // ── Client (Google) ──────────────────────────────────────────
+    // â”€â”€ Client (Google) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (_role == _UserRole.client) {
       return const ClientMenuScreen();
     }
 
-    // ── Admin (Google) ───────────────────────────────────────────
+    // â”€â”€ Admin (Google) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (_role == _UserRole.admin) {
       return _AdminScaffold(
         selectedIndex: _selectedIndex,
@@ -190,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // ── Practitioner (Google) ────────────────────────────────────
+    // â”€â”€ Practitioner (Google) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     return _PractitionerScaffold(
       selectedIndex: _selectedIndex,
       onIndexChanged: (i) => setState(() => _selectedIndex = i),
@@ -198,14 +196,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Role enum (internal to this file)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum _UserRole { client, practitioner, admin }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Admin scaffold — 6 tabs (all practitioner tabs + Users/UAM)
+// Admin scaffold — 5 tabs. Room/History are now in-screen tabs inside
+// Book/Schedule to keep bottom navigation simple.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AdminScaffold extends StatelessWidget {
@@ -227,8 +226,6 @@ class _AdminScaffold extends StatelessWidget {
         children: [
           const BookScreen(),
           const UpcomingScreen(),
-          const RoomScreen(),
-          const HistoryScreen(),
           const ClientsScreen(),
           UamScreen(onSignOut: onSignOut),
           const AdminRequestsScreen(),
@@ -246,17 +243,7 @@ class _AdminScaffold extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.event_outlined),
             selectedIcon: Icon(Icons.event),
-            label: 'Upcoming',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.meeting_room_outlined),
-            selectedIcon: Icon(Icons.meeting_room),
-            label: 'Room',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'History',
+            label: 'Schedule',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),
@@ -280,7 +267,7 @@ class _AdminScaffold extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Practitioner scaffold — 5 tabs + Account tab (with sign-out)
+// Practitioner scaffold — 4 tabs (Book, Schedule, Clients, Account)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _PractitionerScaffold extends StatelessWidget {
@@ -304,8 +291,6 @@ class _PractitionerScaffold extends StatelessWidget {
         children: [
           const BookScreen(),
           const UpcomingScreen(),
-          const RoomScreen(),
-          const HistoryScreen(),
           const ClientsScreen(),
           _AccountTab(
             email: provider.userEmail,
@@ -327,17 +312,7 @@ class _PractitionerScaffold extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.event_outlined),
             selectedIcon: Icon(Icons.event),
-            label: 'Upcoming',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.meeting_room_outlined),
-            selectedIcon: Icon(Icons.meeting_room),
-            label: 'Room',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'History',
+            label: 'Schedule',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),
@@ -355,9 +330,9 @@ class _PractitionerScaffold extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Account tab for practitioners
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _AccountTab extends StatelessWidget {
   final String? email;
@@ -382,7 +357,7 @@ class _AccountTab extends StatelessWidget {
                 child: const Icon(
                   Icons.medical_services,
                   size: 40,
-                  color: Color(0xFF1A73E8),
+                  color: Color(0xFF1D49A7),
                 ),
               ),
             ),
@@ -402,7 +377,7 @@ class _AccountTab extends StatelessWidget {
             ],
             const SizedBox(height: 8),
             Text(
-              'Psychology Clinics',
+              'The MindBody Practice',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
             ),
@@ -436,9 +411,9 @@ class _AccountTab extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Sign-in page
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SignInPage extends StatelessWidget {
   final bool isLoading;
@@ -535,24 +510,20 @@ class _SignInPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
-                Icons.calendar_month,
-                size: 72,
-                color: Color(0xFF1A73E8),
-              ),
-              const SizedBox(height: 24),
+              Image.asset('assets/image2.png', height: 96),
+              const SizedBox(height: 20),
               const Text(
-                'BookMe',
+                'MBPractice',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A73E8),
+                  color: Color(0xFF1D49A7),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Psychology Clinics',
+                'The MindBody Practice',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),

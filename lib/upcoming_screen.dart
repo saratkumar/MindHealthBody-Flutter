@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,96 +11,251 @@ import 'client_registry_service.dart';
 import 'invoice_pdf_generator.dart';
 import 'invoice_excel_service.dart';
 
-class UpcomingScreen extends StatelessWidget {
+class UpcomingScreen extends StatefulWidget {
   const UpcomingScreen({super.key});
+
+  @override
+  State<UpcomingScreen> createState() => _UpcomingScreenState();
+}
+
+class _UpcomingScreenState extends State<UpcomingScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
+      if (_tabController.index == 1) {
+        context.read<BookingProvider>().loadHistory();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Upcoming')),
-      body: Consumer<BookingProvider>(
-        builder: (context, provider, _) {
-          if (provider.status == BookingStatus.loading &&
-              provider.myUpcomingBookings.isEmpty &&
-              provider.othersUpcomingBookings.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.myUpcomingBookings.isEmpty &&
-              provider.othersUpcomingBookings.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.event_available, size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 12),
-                  Text('No upcoming appointments',
-                      style: TextStyle(color: Colors.grey.shade500)),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: provider.loadUpcoming,
-                    child: const Text('Refresh'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: provider.loadUpcoming,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _SectionHeader(
-                  title: 'My Bookings',
-                  count: provider.myUpcomingBookings.length,
-                ),
-                const SizedBox(height: 8),
-                if (provider.myUpcomingBookings.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      'No upcoming bookings made through this app.',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
-                    ),
-                  )
-                else
-                  ...provider.myUpcomingBookings.map(
-                    (b) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _BookingCard(booking: b, showActions: true),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
-                _SectionHeader(
-                  title: "Room Schedule — Today",
-                  count: provider.othersUpcomingBookings.length,
-                ),
-                const SizedBox(height: 8),
-                if (provider.othersUpcomingBookings.isEmpty)
-                  Text(
-                    'No other appointments on the calendar.',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
-                  )
-                else
-                  ...provider.othersUpcomingBookings.map(
-                    (b) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _BookingCard(booking: b, showActions: false),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
+      appBar: AppBar(
+        title: const Text('Schedule'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Upcoming'),
+            Tab(text: 'History'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          _UpcomingBody(),
+          _HistoryBody(),
+        ],
       ),
     );
   }
 }
 
-// ── Invoice helpers ───────────────────────────────────────────────────────────
+class _UpcomingBody extends StatelessWidget {
+  const _UpcomingBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BookingProvider>(
+      builder: (context, provider, _) {
+        if (provider.status == BookingStatus.loading &&
+            provider.myUpcomingBookings.isEmpty &&
+            provider.othersUpcomingBookings.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (provider.myUpcomingBookings.isEmpty &&
+            provider.othersUpcomingBookings.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.event_available, size: 48, color: Colors.grey.shade300),
+                const SizedBox(height: 12),
+                Text('No upcoming appointments',
+                    style: TextStyle(color: Colors.grey.shade500)),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: provider.loadUpcoming,
+                  child: const Text('Refresh'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: provider.loadUpcoming,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _SectionHeader(
+                title: 'My Bookings',
+                count: provider.myUpcomingBookings.length,
+              ),
+              const SizedBox(height: 8),
+              if (provider.myUpcomingBookings.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'No upcoming bookings made through this app.',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                )
+              else
+                ...provider.myUpcomingBookings.map(
+                  (b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _BookingCard(booking: b, showActions: true),
+                  ),
+                ),
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              _SectionHeader(
+                title: 'Room Schedule — Today',
+                count: provider.othersUpcomingBookings.length,
+              ),
+              const SizedBox(height: 8),
+              if (provider.othersUpcomingBookings.isEmpty)
+                Text(
+                  'No other appointments on the calendar.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                )
+              else
+                ...provider.othersUpcomingBookings.map(
+                  (b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _BookingCard(booking: b, showActions: false),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── History (formerly the standalone History tab) ────────────────────────────
+
+class _HistoryBody extends StatefulWidget {
+  const _HistoryBody();
+
+  @override
+  State<_HistoryBody> createState() => _HistoryBodyState();
+}
+
+class _HistoryBodyState extends State<_HistoryBody> {
+  String _filter = 'mine'; // 'mine' | 'shared'
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BookingProvider>(
+      builder: (context, provider, _) {
+        if (provider.status == BookingStatus.loading &&
+            provider.pastBookings.isEmpty &&
+            provider.pastSharedBookings.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final bookings =
+            _filter == 'mine' ? provider.pastBookings : provider.pastSharedBookings;
+        final emptyMessage = _filter == 'mine'
+            ? 'No past bookings from your calendar'
+            : 'No past bookings from the shared calendar';
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _HistoryFilterButton(
+                      label: 'My Bookings',
+                      selected: _filter == 'mine',
+                      onTap: () => setState(() => _filter = 'mine'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _HistoryFilterButton(
+                      label: 'Shared Calendar',
+                      selected: _filter == 'shared',
+                      onTap: () => setState(() => _filter = 'shared'),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () => context.read<BookingProvider>().loadHistory(),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _BookingList(bookings: bookings, emptyMessage: emptyMessage),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HistoryFilterButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _HistoryFilterButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF1D49A7) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? const Color(0xFF1D49A7) : Colors.grey.shade300,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€ Invoice helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void _showInvoiceDialog(BuildContext context, Booking booking) {
   showDialog(
@@ -137,7 +292,7 @@ Future<void> _generateAndShare(
             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
           ),
           SizedBox(width: 14),
-          Text('Generating invoice…'),
+          Text('Generating invoiceâ€¦'),
         ],
       ),
     ),
@@ -188,7 +343,7 @@ Future<void> _generateAndShare(
           mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ),
       ],
-      subject: 'Invoice $invoiceNumber — ${booking.guestName}',
+      subject: 'Invoice $invoiceNumber â€” ${booking.guestName}',
       text: 'Hi ${booking.guestName}, please find your invoice attached.',
     );
   } catch (e) {
@@ -201,7 +356,7 @@ Future<void> _generateAndShare(
   }
 }
 
-// ── Invoice dialog ────────────────────────────────────────────────────────────
+// â”€â”€ Invoice dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _LineItem {
   final descCtrl = TextEditingController();
@@ -358,7 +513,7 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                       style: TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 14)),
                   Text(
-                    '₹ ${_total.toStringAsFixed(2)}',
+                    'â‚¹ ${_total.toStringAsFixed(2)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 14),
                   ),
@@ -481,7 +636,7 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
   }
 }
 
-// ── Widgets ──────────────────────────────────────────────────────────────────
+// â”€â”€ Widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -509,6 +664,108 @@ class _SectionHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _BookingList extends StatelessWidget {
+  final List<Booking> bookings;
+  final String emptyMessage;
+
+  const _BookingList({required this.bookings, required this.emptyMessage});
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookings.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history, size: 48, color: Colors.grey.shade300),
+            const SizedBox(height: 12),
+            Text(emptyMessage, style: TextStyle(color: Colors.grey.shade500)),
+          ],
+        ),
+      );
+    }
+
+    final grouped = <String, List<Booking>>{};
+    for (final b in bookings) {
+      final key = DateFormat('MMMM yyyy').format(b.startTime);
+      grouped.putIfAbsent(key, () => []).add(b);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: grouped.entries.map((entry) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, top: 4),
+              child: Text(
+                entry.key,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade500,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...entry.value.map((b) => _HistoryTile(booking: b)),
+            const SizedBox(height: 8),
+          ],
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _HistoryTile extends StatelessWidget {
+  final Booking booking;
+  const _HistoryTile({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              '${booking.startTime.day}',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+          ),
+        ),
+        title: Text(
+          booking.title,
+          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+        ),
+        subtitle: Text(
+          '${booking.guestName}  ·  ${DateFormat("h:mm a").format(booking.startTime)}',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            booking.durationLabel,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -553,7 +810,7 @@ class _BookingCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: isSoon
                             ? const Color(0xFFA32D2D)
-                            : const Color(0xFF1A73E8),
+                            : const Color(0xFF1D49A7),
                       ),
                     ),
                   ),
@@ -562,8 +819,8 @@ class _BookingCard extends StatelessWidget {
             const SizedBox(height: 6),
             _MetaRow(
               icon: Icons.schedule,
-              text: '${DateFormat("EEE, d MMM").format(booking.startTime)}  ·  '
-                  '${DateFormat("h:mm a").format(booking.startTime)} – '
+              text: '${DateFormat("EEE, d MMM").format(booking.startTime)}  Â·  '
+                  '${DateFormat("h:mm a").format(booking.startTime)} â€“ '
                   '${DateFormat("h:mm a").format(booking.endTime)}',
             ),
             if (booking.room != null)
@@ -594,14 +851,14 @@ class _BookingCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: () => _showInvoiceDialog(context, booking),
                     icon: const Icon(Icons.receipt_long, size: 14,
-                        color: Color(0xFF1A73E8)),
+                        color: Color(0xFF1D49A7)),
                     label: const Text('Invoice', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: const BorderSide(color: Color(0xFF1A73E8)),
-                      foregroundColor: const Color(0xFF1A73E8),
+                      side: const BorderSide(color: Color(0xFF1D49A7)),
+                      foregroundColor: const Color(0xFF1D49A7),
                     ),
                   ),
                   // Calendar button

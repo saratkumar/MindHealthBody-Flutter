@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   final VoidCallback onSuccess;
@@ -48,7 +48,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               const Icon(
                 Icons.admin_panel_settings,
                 size: 64,
-                color: Color(0xFF1A73E8),
+                color: Color(0xFF1D49A7),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -61,7 +61,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Psychology Clinics — Super User',
+                'Psychology Clinics â€” Super User',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
               ),

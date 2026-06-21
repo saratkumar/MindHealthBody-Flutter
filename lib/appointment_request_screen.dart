@@ -1,15 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'booking_provider.dart';
-import 'slot_chip.dart';
 import 'user_registry.dart';
 
-/// Client-facing slot picker that emails a request to the practitioner.
-/// Unlike the practitioner's BookScreen, this never writes to Calendar —
-/// the practitioner follows up with the client directly.
+/// Client-facing reservation form. The client freely picks their preferred
+/// date and time â€” no calendar-availability check or slot restriction â€” and
+/// this emails the practitioner directly so they can confirm or adjust.
 class AppointmentRequestScreen extends StatefulWidget {
   const AppointmentRequestScreen({super.key});
 
@@ -24,13 +23,13 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
   final _notesCtrl = TextEditingController();
   bool _submitting = false;
 
+  DateTime? _date;
+  TimeOfDay? _time;
+
   @override
   void initState() {
     super.initState();
     _loadPractitioners();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BookingProvider>().loadSlots();
-    });
   }
 
   Future<void> _loadPractitioners() async {
@@ -49,10 +48,36 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
     super.dispose();
   }
 
+  DateTime? get _preferredStart {
+    if (_date == null || _time == null) return null;
+    return DateTime(_date!.year, _date!.month, _date!.day, _time!.hour, _time!.minute);
+  }
+
+  Future<void> _pickDate() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date ?? today,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
+    );
+    if (picked == null) return;
+    setState(() => _date = picked);
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _time ?? const TimeOfDay(hour: 10, minute: 0),
+    );
+    if (picked == null) return;
+    setState(() => _time = picked);
+  }
+
   Future<void> _submit() async {
-    final provider = context.read<BookingProvider>();
-    if (provider.selectedSlot == null) {
-      _snack('Please pick a time slot', error: true);
+    final preferredStart = _preferredStart;
+    if (preferredStart == null) {
+      _snack('Please pick a preferred date and time', error: true);
       return;
     }
     if (_practitioners.isEmpty) {
@@ -67,15 +92,17 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
 
     setState(() => _submitting = true);
     try {
+      final provider = context.read<BookingProvider>();
       final clientEmail = provider.userEmail ?? '';
       final account = provider.currentAccount as GoogleSignInAccount?;
       final clientName = account?.displayName ?? clientEmail;
-      final ok = await provider.requestAppointment(
+      final ok = await provider.reserveAppointment(
         practitionerEmail: practitioner.email,
         practitionerName: practitioner.name,
         clientName: clientName,
         clientEmail: clientEmail,
         clientPhone: '',
+        preferredStart: preferredStart,
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       );
 
@@ -84,9 +111,11 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
         await showDialog(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('Request Sent'),
+            title: const Text('Appointment Reserved'),
             content: Text(
-              'Your appointment request has been sent to ${practitioner.name}. '
+              'Your reservation request has been sent to ${practitioner.name} for '
+              '${DateFormat('EEE, d MMM yyyy').format(preferredStart)} at '
+              '${DateFormat('h:mm a').format(preferredStart)}. '
               'They will contact you to confirm.',
             ),
             actions: [
@@ -101,7 +130,7 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
           ),
         );
       } else {
-        _snack(provider.errorMessage ?? 'Could not send request', error: true);
+        _snack(provider.errorMessage ?? 'Could not send reservation', error: true);
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -117,12 +146,12 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<BookingProvider>();
+    final preferredStart = _preferredStart;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Request an Appointment')),
+      appBar: AppBar(title: const Text('Reserve an Appointment')),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 96),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
           if (_loadingPractitioners)
             const Padding(
@@ -131,7 +160,7 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
             )
           else if (_practitioners.length > 1)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.only(bottom: 16),
               child: DropdownButtonFormField<AppUser>(
                 initialValue: _selectedPractitioner,
                 hint: const Text('Choose your practitioner'),
@@ -141,150 +170,96 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
                 onChanged: (v) => setState(() => _selectedPractitioner = v),
               ),
             ),
-          _DateStrip(),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Available slots — ${DateFormat('EEE, d MMM').format(provider.selectedDate)}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade600,
-              ),
+          Text(
+            'Pick your preferred date and time. There is no need to check '
+            'availability â€” your practitioner will contact you to confirm.',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 16),
+          _PickerTile(
+            icon: Icons.calendar_today_outlined,
+            label: 'Preferred date',
+            value: _date == null ? 'Choose a date' : DateFormat('EEE, d MMM yyyy').format(_date!),
+            onTap: _pickDate,
+          ),
+          const SizedBox(height: 10),
+          _PickerTile(
+            icon: Icons.schedule_outlined,
+            label: 'Preferred time',
+            value: _time == null ? 'Choose a time' : _time!.format(context),
+            onTap: _pickTime,
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _notesCtrl,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Notes (optional)',
+              hintText: 'Anything the practitioner should know',
             ),
           ),
-          const SizedBox(height: 12),
-          _SlotsGrid(),
-          if (provider.selectedSlot != null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: TextField(
-                controller: _notesCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  hintText: 'Anything the practitioner should know',
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: ElevatedButton(
-                onPressed: _submitting ? null : _submit,
-                child: _submitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Text(
-                        'Request ${DateFormat("h:mm a").format(provider.selectedSlot!.start)} – '
-                        '${DateFormat("h:mm a").format(provider.selectedSlot!.end)}',
-                      ),
-              ),
-            ),
-          ],
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _submitting ? null : _submit,
+            child: _submitting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Text(
+                    preferredStart == null
+                        ? 'Reserve Appointment'
+                        : 'Reserve ${DateFormat("d MMM, h:mm a").format(preferredStart)}',
+                  ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _DateStrip extends StatelessWidget {
+class _PickerTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  const _PickerTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<BookingProvider>();
-    final today = DateTime.now();
-
-    return SizedBox(
-      height: 80,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: 14,
-        itemBuilder: (context, i) {
-          final date = today.add(Duration(days: i));
-          final isSelected = date.year == provider.selectedDate.year &&
-              date.month == provider.selectedDate.month &&
-              date.day == provider.selectedDate.day;
-
-          return GestureDetector(
-            onTap: () => provider.selectDate(date),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: 52,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF1A73E8) : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isSelected ? const Color(0xFF1A73E8) : Colors.grey.shade200,
-                ),
-              ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: const Color(0xFF1D49A7)),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    DateFormat('EEE').format(date),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isSelected ? Colors.white70 : Colors.grey.shade500,
-                    ),
-                  ),
+                  Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                   const SizedBox(height: 2),
-                  Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : Colors.black87,
-                    ),
-                  ),
+                  Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SlotsGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<BookingProvider>();
-
-    if (provider.status == BookingStatus.loading) {
-      return const Padding(
-        padding: EdgeInsets.all(32),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (provider.slots.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(32),
-        child: Center(
-          child: Text('No slots available', style: TextStyle(color: Colors.grey.shade500)),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          ],
         ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: provider.slots.map((slot) {
-          return SlotChip(
-            slot: slot,
-            isSelected: provider.selectedSlot == slot,
-            onTap: slot.isAvailable ? () => provider.selectSlot(slot) : null,
-          );
-        }).toList(),
       ),
     );
   }

@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -13,6 +13,8 @@ import 'intake_form.dart';
 import 'intake_form_service.dart';
 import 'sheets_service.dart';
 import 'user_registry.dart';
+
+enum _ClientIdStatus { idle, checking, found, newClient, signInRequired, error }
 
 class IntakeFormScreen extends StatefulWidget {
   const IntakeFormScreen({super.key});
@@ -77,16 +79,57 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
 
   bool _submitting = false;
 
+  // Client ID (autofilled for returning clients, looked up by email)
+  final _emailFocus = FocusNode();
+  String? _clientId;
+  _ClientIdStatus _clientIdStatus = _ClientIdStatus.idle;
+
   @override
   void initState() {
     super.initState();
     _loadPractitioners();
     _dateCtrl.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus) _lookupClientId();
+    });
     // Pre-fill email from signed-in user
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final email = context.read<BookingProvider>().userEmail ?? '';
       _emailCtrl.text = email;
+      _lookupClientId();
     });
+  }
+
+  Future<void> _lookupClientId() async {
+    final account =
+        context.read<BookingProvider>().currentAccount as GoogleSignInAccount?;
+    if (account == null) {
+      setState(() {
+        _clientId = null;
+        _clientIdStatus = _ClientIdStatus.signInRequired;
+      });
+      return;
+    }
+
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty || !email.contains('@')) return;
+
+    setState(() => _clientIdStatus = _ClientIdStatus.checking);
+    try {
+      final client = await ClientRegistryService.findByEmail(account, email);
+      if (!mounted) return;
+      setState(() {
+        _clientId = client?.clientId;
+        _clientIdStatus =
+            client != null ? _ClientIdStatus.found : _ClientIdStatus.newClient;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _clientId = null;
+        _clientIdStatus = _ClientIdStatus.error;
+      });
+    }
   }
 
   Future<void> _loadPractitioners() async {
@@ -110,6 +153,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
     ]) {
       c.dispose();
     }
+    _emailFocus.dispose();
     super.dispose();
   }
 
@@ -251,14 +295,14 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                     const SizedBox(height: 8),
                     Row(children: [
                       const Icon(Icons.email_outlined,
-                          size: 16, color: Color(0xFF1A73E8)),
+                          size: 16, color: Color(0xFF1D49A7)),
                       const SizedBox(width: 6),
                       Flexible(
                         child: SelectableText(
                           practitioner.email,
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A73E8)),
+                              color: Color(0xFF1D49A7)),
                         ),
                       ),
                     ]),
@@ -282,7 +326,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                     SelectableText(practitioner.email,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A73E8))),
+                            color: Color(0xFF1D49A7))),
                   ],
           ),
           actions: [
@@ -334,7 +378,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Header with logo ───────────────────────────────────────────
+              // â”€â”€ Header with logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Center(
                 child: Column(
                   children: [
@@ -345,7 +389,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A4B8C),
+                        color: Color(0xFF1D49A7),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -365,7 +409,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 8),
-              // ── Practitioner selection ─────────────────────────────────────
+              // â”€â”€ Practitioner selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               if (_loadingPractitioners)
                 const Center(child: CircularProgressIndicator())
               else if (_practitioners.length > 1) ...[
@@ -386,9 +430,13 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 const SizedBox(height: 20),
               ],
 
-              // ── Personal details ───────────────────────────────────────────
+              // â”€â”€ Personal details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               _sectionTitle('Patient Details'),
               const SizedBox(height: 12),
+              if (_clientIdStatus != _ClientIdStatus.idle) ...[
+                _ClientIdBadge(clientId: _clientId, status: _clientIdStatus),
+                const SizedBox(height: 12),
+              ],
               _field(_nameCtrl, 'Patient\'s Name (as per NRIC/Passport)', required: true),
               const SizedBox(height: 10),
               Row(children: [
@@ -415,7 +463,9 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                     child: _field(_emailCtrl, 'E-mail',
-                        keyboard: TextInputType.emailAddress, required: true)),
+                        keyboard: TextInputType.emailAddress,
+                        required: true,
+                        focusNode: _emailFocus)),
               ]),
               const SizedBox(height: 10),
               Row(children: [
@@ -450,7 +500,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 ),
               ]),
 
-              // ── Referral ───────────────────────────────────────────────────
+              // â”€â”€ Referral â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 20),
               _sectionTitle('How were you referred?'),
               const SizedBox(height: 8),
@@ -493,7 +543,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 _field(_refOtherCtrl, 'Other details'),
               ],
 
-              // ── Medical ────────────────────────────────────────────────────
+              // â”€â”€ Medical â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 20),
               _sectionTitle('Medical History'),
               const SizedBox(height: 8),
@@ -520,7 +570,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 _field(_medicationCtrl, 'Medication details'),
               ],
 
-              // ── Goals & history ────────────────────────────────────────────
+              // â”€â”€ Goals & history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 20),
               _sectionTitle('Goals & Background'),
               const SizedBox(height: 8),
@@ -548,28 +598,28 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 _field(_fearsCtrl, 'Please describe'),
               ],
 
-              // ── Contact lenses notice ──────────────────────────────────────
+              // â”€â”€ Contact lenses notice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Color(0xFF1A4B8C), width: 1.5),
+                  border: Border.all(color: Color(0xFF1D49A7), width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                   color: Color(0xFFEEF3FB),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, size: 18, color: Color(0xFF1A4B8C)),
+                    Icon(Icons.info_outline, size: 18, color: Color(0xFF1D49A7)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: const Text(
                         'IF YOU WEAR CONTACT LENSES AND CANNOT COMFORTABLY CLOSE YOUR EYES '
-                        'FOR APPROXIMATELY ½ HOUR WITH THEM IN YOUR EYES, PLEASE REMOVE THEM.',
+                        'FOR APPROXIMATELY Â½ HOUR WITH THEM IN YOUR EYES, PLEASE REMOVE THEM.',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A4B8C),
+                          color: Color(0xFF1D49A7),
                         ),
                       ),
                     ),
@@ -577,7 +627,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 ),
               ),
 
-              // ── Page 1 consent ─────────────────────────────────────────────
+              // â”€â”€ Page 1 consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 24),
               _sectionTitle('Consent & Fee Agreement (Page 1)'),
               const SizedBox(height: 8),
@@ -610,7 +660,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               _field(_consentNameCtrl, 'I, (your full name)', required: true),
               const SizedBox(height: 8),
               const Text(
-                '…gives permission to the Mental Health Professional (MHP) to work with me on my mental '
+                'â€¦gives permission to the Mental Health Professional (MHP) to work with me on my mental '
                 'health condition(s) for the required number of sessions.',
                 style: TextStyle(fontSize: 12, color: Color(0xFF555555)),
               ),
@@ -619,7 +669,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               const SizedBox(height: 6),
               SignaturePad(key: _sig1Key),
 
-              // ── Page 2 confidentiality ─────────────────────────────────────
+              // â”€â”€ Page 2 confidentiality â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 24),
               _sectionTitle('Confidentiality & Safety Statement (Page 2)'),
               const SizedBox(height: 8),
@@ -649,7 +699,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               const SizedBox(height: 6),
               SignaturePad(key: _sig2Key),
 
-              // ── Submit ─────────────────────────────────────────────────────
+              // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submitting ? null : _submit,
@@ -677,7 +727,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
   Widget _sectionTitle(String title) {
     return Text(title,
         style: const TextStyle(
-            fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1A73E8)));
+            fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1D49A7)));
   }
 
   Widget _label(String text) {
@@ -692,6 +742,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
     int maxLines = 1,
     TextInputType? keyboard,
     bool required = false,
+    FocusNode? focusNode,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -700,6 +751,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
         const SizedBox(height: 4),
         TextFormField(
           controller: ctrl,
+          focusNode: focusNode,
           maxLines: maxLines,
           keyboardType: keyboard,
           validator: required
@@ -732,7 +784,64 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
   }
 }
 
-// ── Signature pad ────────────────────────────────────────────────────────────
+// â”€â”€ Client ID badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+class _ClientIdBadge extends StatelessWidget {
+  final String? clientId;
+  final _ClientIdStatus status;
+  const _ClientIdBadge({this.clientId, required this.status});
+
+  String get _message => switch (status) {
+        _ClientIdStatus.checking => 'Checking your client IDâ€¦',
+        _ClientIdStatus.found => 'Client ID: $clientId',
+        _ClientIdStatus.newClient =>
+          'New client â€” your ID will be assigned on submission',
+        _ClientIdStatus.signInRequired =>
+          'Sign in with Google to look up or assign your client ID',
+        _ClientIdStatus.error =>
+          'Could not check client ID right now â€” it will still be assigned on submission',
+        _ClientIdStatus.idle => '',
+      };
+
+  bool get _emphasized => status == _ClientIdStatus.found;
+
+  @override
+  Widget build(BuildContext context) {
+    final checking = status == _ClientIdStatus.checking;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF0FB),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF1D49A7).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.badge_outlined, size: 18, color: Color(0xFF1D49A7)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _message,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: _emphasized ? FontWeight.w700 : FontWeight.w500,
+                color: _emphasized ? const Color(0xFF1D49A7) : Colors.grey.shade700,
+              ),
+            ),
+          ),
+          if (checking)
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// â”€â”€ Signature pad â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class SignaturePad extends StatefulWidget {
   const SignaturePad({super.key});
@@ -796,7 +905,7 @@ class SignaturePadState extends State<SignaturePad> {
               onHorizontalDragStart: _startStroke,
               onHorizontalDragUpdate: _extendStroke,
               child: CustomPaint(
-                painter: _SignaturePainter(_strokes),
+                foregroundPainter: _SignaturePainter(_strokes),
                 child: Container(color: Colors.white),
               ),
             ),
