@@ -211,8 +211,10 @@ class _AoqFormScreenState extends State<AoqFormScreen>
           controller: _tabs,
           tabs: [
             Tab(
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Text('Section A – Baseline'),
+              child: Row(children: [
+                const Flexible(
+                  child: Text('Section A – Baseline', overflow: TextOverflow.ellipsis),
+                ),
                 if (_sectionComplete(_secA))
                   const Padding(
                     padding: EdgeInsets.only(left: 6),
@@ -221,8 +223,10 @@ class _AoqFormScreenState extends State<AoqFormScreen>
               ]),
             ),
             Tab(
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Text('Section B – Stress'),
+              child: Row(children: [
+                const Flexible(
+                  child: Text('Section B – Stress', overflow: TextOverflow.ellipsis),
+                ),
                 if (_sectionComplete(_secB))
                   const Padding(
                     padding: EdgeInsets.only(left: 6),

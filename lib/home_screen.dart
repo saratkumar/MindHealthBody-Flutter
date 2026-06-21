@@ -504,15 +504,12 @@ class _SignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight - 64),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Image.asset('assets/image2.png', height: 96),
               const SizedBox(height: 20),
               const Text(
@@ -594,9 +591,7 @@ class _SignInPage extends StatelessWidget {
                   side: BorderSide(color: Colors.orange.shade300),
                 ),
               ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
       ),
