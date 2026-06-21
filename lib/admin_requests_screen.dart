@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -159,7 +159,7 @@ class _RequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPractitioner = request.role == 'practitioner';
-    final roleColor = isPractitioner ? const Color(0xFFD93025) : const Color(0xFF1D49A7);
+    final roleColor = isPractitioner ? const Color(0xFFD93025) : const Color(0xFF023047);
     final roleBg = isPractitioner ? const Color(0xFFFCE8E6) : const Color(0xFFE8F0FE);
 
     return Card(
@@ -193,7 +193,7 @@ class _RequestCard extends StatelessWidget {
               const SizedBox(height: 8),
             ],
             Text(
-              'Requested by ${request.requestedByName} Â· '
+              'Requested by ${request.requestedByName} · '
               '${DateFormat('dd MMM yyyy').format(request.createdAt)}',
               style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
             ),

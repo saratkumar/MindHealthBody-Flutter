@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'booking_provider.dart';
 import 'book_screen.dart';
@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<BookingProvider>();
 
-    // â”€â”€ Admin mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Admin mode ──────────────────────────────────────────────
     if (_isAdmin) {
       return _AdminScaffold(
         selectedIndex: _selectedIndex,
@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // â”€â”€ Test account (static bypass) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Test account (static bypass) ─────────────────────────────
     if (_testRole == _UserRole.client) {
       return ClientMenuScreen(onSignOut: _exitTestRole);
     }
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // â”€â”€ Not signed in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Not signed in ────────────────────────────────────────────
     if (!provider.isSignedIn) {
       return _SignInPage(
         isLoading: provider.status == BookingStatus.loading || _checkingRegistry,
@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // â”€â”€ Checking registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Checking registry ─────────────────────────────────────────
     if (_checkingRegistry || _role == null) {
       return const Scaffold(
         body: Center(
@@ -167,19 +167,19 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text('Verifying your accessâ€¦'),
+              Text('Verifying your access…'),
             ],
           ),
         ),
       );
     }
 
-    // â”€â”€ Client (Google) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Client (Google) ──────────────────────────────────────────
     if (_role == _UserRole.client) {
       return const ClientMenuScreen();
     }
 
-    // â”€â”€ Admin (Google) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Admin (Google) ───────────────────────────────────────────
     if (_role == _UserRole.admin) {
       return _AdminScaffold(
         selectedIndex: _selectedIndex,
@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // â”€â”€ Practitioner (Google) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Practitioner (Google) ────────────────────────────────────
     return _PractitionerScaffold(
       selectedIndex: _selectedIndex,
       onIndexChanged: (i) => setState(() => _selectedIndex = i),
@@ -196,16 +196,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // Role enum (internal to this file)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 
 enum _UserRole { client, practitioner, admin }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Admin scaffold — 5 tabs. Room/History are now in-screen tabs inside
 // Book/Schedule to keep bottom navigation simple.
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _AdminScaffold extends StatelessWidget {
   final int selectedIndex;
@@ -266,9 +266,9 @@ class _AdminScaffold extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Practitioner scaffold — 4 tabs (Book, Schedule, Clients, Account)
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _PractitionerScaffold extends StatelessWidget {
   final int selectedIndex;
@@ -330,9 +330,9 @@ class _PractitionerScaffold extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // Account tab for practitioners
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _AccountTab extends StatelessWidget {
   final String? email;
@@ -357,7 +357,7 @@ class _AccountTab extends StatelessWidget {
                 child: const Icon(
                   Icons.medical_services,
                   size: 40,
-                  color: Color(0xFF1D49A7),
+                  color: Color(0xFF023047),
                 ),
               ),
             ),
@@ -411,9 +411,9 @@ class _AccountTab extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // Sign-in page
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _SignInPage extends StatelessWidget {
   final bool isLoading;
@@ -504,12 +504,15 @@ class _SignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - 64),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               Image.asset('assets/image2.png', height: 96),
               const SizedBox(height: 20),
               const Text(
@@ -518,7 +521,7 @@ class _SignInPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1D49A7),
+                  color: Color(0xFF023047),
                 ),
               ),
               const SizedBox(height: 8),
@@ -591,7 +594,9 @@ class _SignInPage extends StatelessWidget {
                   side: BorderSide(color: Colors.orange.shade300),
                 ),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

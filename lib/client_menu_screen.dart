@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -93,7 +93,7 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(Icons.person,
-                      size: 42, color: Color(0xFF1D49A7)),
+                      size: 42, color: Color(0xFF023047)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -102,7 +102,7 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
                   style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1D49A7))),
+                      color: Color(0xFF023047))),
               const SizedBox(height: 4),
               const Text('The Mindbody Practice',
                   textAlign: TextAlign.center,
@@ -116,7 +116,7 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
               ],
               const SizedBox(height: 32),
 
-              // â”€â”€ Intake Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Intake Form ────────────────────────────────────────────────
               if (_checking)
                 const Center(child: CircularProgressIndicator())
               else
@@ -124,7 +124,7 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
                   icon: Icons.assignment_outlined,
                   title: 'Client Intake Form',
                   subtitle: _intakeSubmitted
-                      ? 'Already submitted â€” thank you!'
+                      ? 'Already submitted — thank you!'
                       : 'Complete your personal details, consent & signatures',
                   completed: _intakeSubmitted,
                   onTap: _intakeSubmitted
@@ -142,11 +142,11 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
 
               const SizedBox(height: 12),
 
-              // â”€â”€ Request an Appointment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Request an Appointment ───────────────────────────────────────
               _MenuCard(
                 icon: Icons.calendar_month_outlined,
                 title: 'Reserve an Appointment',
-                subtitle: 'Pick a date & time â€” your practitioner will contact you to confirm',
+                subtitle: 'Pick a date & time — your practitioner will contact you to confirm',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const AppointmentRequestScreen()),
@@ -155,10 +155,10 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
 
               const SizedBox(height: 12),
 
-              // â”€â”€ PSA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── PSA ────────────────────────────────────────────────────────
               _MenuCard(
                 icon: Icons.psychology_outlined,
-                title: 'PSA â€“ Personality Styles Assessment',
+                title: 'PSA – Personality Styles Assessment',
                 subtitle:
                     'Rank 4 options per question to identify your primary personality style',
                 onTap: () => Navigator.push(
@@ -169,10 +169,10 @@ class _ClientMenuScreenState extends State<ClientMenuScreen> {
 
               const SizedBox(height: 12),
 
-              // â”€â”€ AOQ-24 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── AOQ-24 ─────────────────────────────────────────────────────
               _MenuCard(
                 icon: Icons.radar_outlined,
-                title: 'AOQ-24 â€“ Attentional Orientation Quadrant',
+                title: 'AOQ-24 – Attentional Orientation Quadrant',
                 subtitle:
                     'Rate 24 statements across Baseline & Stress conditions',
                 onTap: () => Navigator.push(
@@ -232,7 +232,7 @@ class _MenuCard extends StatelessWidget {
                     size: 28,
                     color: completed
                         ? const Color(0xFF34A853)
-                        : const Color(0xFF1D49A7),
+                        : const Color(0xFF023047),
                   ),
                 ),
                 const SizedBox(width: 14),

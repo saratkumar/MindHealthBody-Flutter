@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'booking_provider.dart';
@@ -104,7 +104,7 @@ class _BookBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Available slots â€” ${_dateLabel(provider.selectedDate)}',
+              'Available slots — ${_dateLabel(provider.selectedDate)}',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -213,12 +213,12 @@ class _DateStrip extends StatelessWidget {
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF1D49A7)
+                    ? const Color(0xFF023047)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFF1D49A7)
+                      ? const Color(0xFF023047)
                       : Colors.grey.shade200,
                 ),
               ),
@@ -247,7 +247,7 @@ class _DateStrip extends StatelessWidget {
                       height: 4,
                       margin: const EdgeInsets.only(top: 2),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white60 : const Color(0xFF1D49A7),
+                        color: isSelected ? Colors.white60 : const Color(0xFF023047),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -314,7 +314,7 @@ class _SegmentedButton extends StatelessWidget {
               duration: const Duration(milliseconds: 120),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF1D49A7) : Colors.transparent,
+                color: isSelected ? const Color(0xFF023047) : Colors.transparent,
                 borderRadius: BorderRadius.circular(7),
               ),
               child: Text(
@@ -398,14 +398,14 @@ class _BookingFormTrigger extends StatelessWidget {
         },
         icon: const Icon(Icons.edit_calendar_outlined),
         label: Text(
-          'Book ${DateFormat("h:mm a").format(slot.start)} â€“ ${DateFormat("h:mm a").format(slot.end)} â€¢ ${slot.roomsLabel}',
+          'Book ${DateFormat("h:mm a").format(slot.start)} – ${DateFormat("h:mm a").format(slot.end)} • ${slot.roomsLabel}',
         ),
       ),
     );
   }
 }
 
-// ── Day Schedule (formerly the standalone Room tab) ──────────────────────────
+// -- Day Schedule (formerly the standalone Room tab) --------------------------
 
 class _DaySchedule extends StatefulWidget {
   const _DaySchedule();
@@ -511,7 +511,7 @@ class _RoomEventCard extends StatelessWidget {
                 color: isNow
                     ? const Color(0xFF188038)
                     : isToday
-                        ? const Color(0xFF1D49A7)
+                        ? const Color(0xFF023047)
                         : Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
               ),
@@ -555,7 +555,7 @@ class _RoomEventCard extends StatelessWidget {
                           child: const Text(
                             'Today',
                             style: TextStyle(
-                                fontSize: 11, color: Color(0xFF1D49A7)),
+                                fontSize: 11, color: Color(0xFF023047)),
                           ),
                         ),
                     ],

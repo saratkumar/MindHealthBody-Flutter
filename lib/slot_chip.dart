@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'time_slot.dart';
 
@@ -24,8 +24,8 @@ class SlotChip extends StatelessWidget {
     final Color roomColor;
 
     if (isSelected) {
-      bgColor = const Color(0xFF1D49A7);
-      borderColor = const Color(0xFF1D49A7);
+      bgColor = const Color(0xFF023047);
+      borderColor = const Color(0xFF023047);
       timeColor = Colors.white;
       roomColor = Colors.white70;
     } else if (available) {
@@ -55,7 +55,7 @@ class SlotChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${DateFormat('h:mm').format(slot.start)}â€“${DateFormat('h:mm a').format(slot.end)}',
+              '${DateFormat('h:mm').format(slot.start)}–${DateFormat('h:mm a').format(slot.end)}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

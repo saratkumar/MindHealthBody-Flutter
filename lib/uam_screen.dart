@@ -163,7 +163,7 @@ class _UserTile extends StatelessWidget {
         ? const Color(0xFF9334E6)
         : isPractitioner
             ? const Color(0xFFD93025)
-            : const Color(0xFF1D49A7);
+            : const Color(0xFF023047);
     final roleBg = isAdmin
         ? const Color(0xFFF3E8FD)
         : isPractitioner

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -150,7 +150,7 @@ class _UpcomingBody extends StatelessWidget {
   }
 }
 
-// ── History (formerly the standalone History tab) ────────────────────────────
+// -- History (formerly the standalone History tab) ----------------------------
 
 class _HistoryBody extends StatefulWidget {
   const _HistoryBody();
@@ -235,10 +235,10 @@ class _HistoryFilterButton extends StatelessWidget {
         duration: const Duration(milliseconds: 120),
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF1D49A7) : Colors.transparent,
+          color: selected ? const Color(0xFF023047) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? const Color(0xFF1D49A7) : Colors.grey.shade300,
+            color: selected ? const Color(0xFF023047) : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -255,7 +255,7 @@ class _HistoryFilterButton extends StatelessWidget {
   }
 }
 
-// â”€â”€ Invoice helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Invoice helpers ───────────────────────────────────────────────────────────
 
 void _showInvoiceDialog(BuildContext context, Booking booking) {
   showDialog(
@@ -292,7 +292,7 @@ Future<void> _generateAndShare(
             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
           ),
           SizedBox(width: 14),
-          Text('Generating invoiceâ€¦'),
+          Text('Generating invoice…'),
         ],
       ),
     ),
@@ -343,7 +343,7 @@ Future<void> _generateAndShare(
           mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ),
       ],
-      subject: 'Invoice $invoiceNumber â€” ${booking.guestName}',
+      subject: 'Invoice $invoiceNumber — ${booking.guestName}',
       text: 'Hi ${booking.guestName}, please find your invoice attached.',
     );
   } catch (e) {
@@ -356,7 +356,7 @@ Future<void> _generateAndShare(
   }
 }
 
-// â”€â”€ Invoice dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Invoice dialog ────────────────────────────────────────────────────────────
 
 class _LineItem {
   final descCtrl = TextEditingController();
@@ -513,7 +513,7 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                       style: TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 14)),
                   Text(
-                    'â‚¹ ${_total.toStringAsFixed(2)}',
+                    '₹ ${_total.toStringAsFixed(2)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 14),
                   ),
@@ -636,7 +636,7 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
   }
 }
 
-// â”€â”€ Widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Widgets ──────────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -810,7 +810,7 @@ class _BookingCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: isSoon
                             ? const Color(0xFFA32D2D)
-                            : const Color(0xFF1D49A7),
+                            : const Color(0xFF023047),
                       ),
                     ),
                   ),
@@ -819,8 +819,8 @@ class _BookingCard extends StatelessWidget {
             const SizedBox(height: 6),
             _MetaRow(
               icon: Icons.schedule,
-              text: '${DateFormat("EEE, d MMM").format(booking.startTime)}  Â·  '
-                  '${DateFormat("h:mm a").format(booking.startTime)} â€“ '
+              text: '${DateFormat("EEE, d MMM").format(booking.startTime)}  ·  '
+                  '${DateFormat("h:mm a").format(booking.startTime)} – '
                   '${DateFormat("h:mm a").format(booking.endTime)}',
             ),
             if (booking.room != null)
@@ -851,14 +851,14 @@ class _BookingCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: () => _showInvoiceDialog(context, booking),
                     icon: const Icon(Icons.receipt_long, size: 14,
-                        color: Color(0xFF1D49A7)),
+                        color: Color(0xFF023047)),
                     label: const Text('Invoice', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: const BorderSide(color: Color(0xFF1D49A7)),
-                      foregroundColor: const Color(0xFF1D49A7),
+                      side: const BorderSide(color: Color(0xFF023047)),
+                      foregroundColor: const Color(0xFF023047),
                     ),
                   ),
                   // Calendar button

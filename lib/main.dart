@@ -1,5 +1,6 @@
 ﻿import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'booking_provider.dart';
 import 'firebase_options.dart';
@@ -53,9 +54,12 @@ class _FirebaseErrorApp extends StatelessWidget {
   }
 }
 
-// MindBody Practice brand colors — kBrandBlue sampled directly from the logo
-const kBrandBlue = Color(0xFF1D49A7);
-const kBrandBlack = Color(0xFF1A1A1A);
+// Brand palette
+const kBrandLightBlue = Color(0xFF8ECAE6);
+const kBrandTeal = Color(0xFF219EBC);
+const kBrandNavy = Color(0xFF023047);
+const kBrandAmber = Color(0xFFFFB703);
+const kBrandOrange = Color(0xFFFB8500);
 
 class MbPracticeApp extends StatelessWidget {
   const MbPracticeApp({super.key});
@@ -63,9 +67,19 @@ class MbPracticeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: kBrandBlue,
+      seedColor: kBrandNavy,
       brightness: Brightness.light,
-    ).copyWith(secondary: kBrandBlack);
+    ).copyWith(
+      secondary: kBrandTeal,
+      tertiary: kBrandAmber,
+    );
+
+    final baseTextTheme = ThemeData(brightness: Brightness.light).textTheme;
+    final textTheme = GoogleFonts.interTextTheme(baseTextTheme).copyWith(
+      headlineSmall: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: kBrandNavy),
+      titleLarge: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: kBrandNavy),
+      titleMedium: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+    );
 
     return ChangeNotifierProvider(
       create: (_) => BookingProvider(),
@@ -75,24 +89,19 @@ class MbPracticeApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: colorScheme,
           useMaterial3: true,
-          fontFamily: 'Roboto',
+          textTheme: textTheme,
           scaffoldBackgroundColor: const Color(0xFFF7F9FC),
           appBarTheme: AppBarTheme(
             centerTitle: false,
             elevation: 0,
             scrolledUnderElevation: 1,
             backgroundColor: const Color(0xFFF7F9FC),
-            foregroundColor: kBrandBlue,
-            titleTextStyle: const TextStyle(
-              color: kBrandBlue,
+            foregroundColor: kBrandNavy,
+            titleTextStyle: GoogleFonts.poppins(
+              color: kBrandNavy,
               fontSize: 19,
               fontWeight: FontWeight.w700,
             ),
-          ),
-          textTheme: const TextTheme(
-            headlineSmall: TextStyle(fontWeight: FontWeight.w700, color: kBrandBlue),
-            titleLarge: TextStyle(fontWeight: FontWeight.w700, color: kBrandBlue),
-            titleMedium: TextStyle(fontWeight: FontWeight.w600),
           ),
           cardTheme: CardThemeData(
             elevation: 0,
@@ -109,7 +118,7 @@ class MbPracticeApp extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kBrandBlue, width: 1.5),
+              borderSide: const BorderSide(color: kBrandTeal, width: 1.5),
             ),
             filled: true,
             fillColor: Colors.white,
@@ -119,9 +128,10 @@ class MbPracticeApp extends StatelessWidget {
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: kBrandBlue,
+              backgroundColor: kBrandTeal,
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(48),
+              textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -130,9 +140,10 @@ class MbPracticeApp extends StatelessWidget {
           ),
           outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
-              foregroundColor: kBrandBlue,
-              side: const BorderSide(color: kBrandBlue, width: 1.5),
+              foregroundColor: kBrandNavy,
+              side: const BorderSide(color: kBrandNavy, width: 1.5),
               minimumSize: const Size.fromHeight(48),
+              textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -141,18 +152,18 @@ class MbPracticeApp extends StatelessWidget {
           navigationBarTheme: NavigationBarThemeData(
             backgroundColor: Colors.white,
             elevation: 1,
-            indicatorColor: kBrandBlue.withValues(alpha: 0.12),
+            indicatorColor: kBrandLightBlue.withValues(alpha: 0.45),
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               final selected = states.contains(WidgetState.selected);
-              return TextStyle(
+              return GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? kBrandBlue : Colors.grey.shade600,
+                color: selected ? kBrandNavy : Colors.grey.shade600,
               );
             }),
             iconTheme: WidgetStateProperty.resolveWith((states) {
               final selected = states.contains(WidgetState.selected);
-              return IconThemeData(color: selected ? kBrandBlue : Colors.grey.shade500);
+              return IconThemeData(color: selected ? kBrandNavy : Colors.grey.shade500);
             }),
           ),
           dialogTheme: DialogThemeData(

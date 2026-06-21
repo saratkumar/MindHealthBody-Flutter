@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +41,7 @@ const _kQuadrantLabels = {
   'A': 'Action-Oriented',
 };
 
-const _kRatingLabels = ['0 â€“ Not like me', '1 â€“ Slightly', '2 â€“ Mostly', '3 â€“ Very much'];
+const _kRatingLabels = ['0 – Not like me', '1 – Slightly', '2 – Mostly', '3 – Very much'];
 
 String _quadrantFor(int idx) {
   if (idx < 6) return 'O';
@@ -100,16 +100,16 @@ class _AoqFormScreenState extends State<AoqFormScreen>
     final baseline = _quadrantTotals(_secA);
     final stress   = _quadrantTotals(_secB);
 
-    // Baseline % = total / 18 (6 items Ã— max 3)
+    // Baseline % = total / 18 (6 items × max 3)
     final bPct = {for (final k in baseline.keys) k: baseline[k]! / 18.0};
     final sPct = {for (final k in stress.keys)   k: stress[k]!   / 18.0};
     final delta = {for (final k in bPct.keys) k: sPct[k]! - bPct[k]!};
 
-    // OGI = max(baseline%) â€“ min(baseline%)
+    // OGI = max(baseline%) – min(baseline%)
     final ogi = bPct.values.reduce((a, b) => a > b ? a : b) -
                 bPct.values.reduce((a, b) => a < b ? a : b);
 
-    // SEI = max(stress%) â€“ min(stress%)
+    // SEI = max(stress%) – min(stress%)
     final sei = sPct.values.reduce((a, b) => a > b ? a : b) -
                 sPct.values.reduce((a, b) => a < b ? a : b);
 
@@ -158,7 +158,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
         setState(() { _result = summary; _submitting = false; });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
-              'Results shown locally â€” sign in with Google to save to the shared spreadsheet.'),
+              'Results shown locally — sign in with Google to save to the shared spreadsheet.'),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 5),
         ));
@@ -212,7 +212,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
           tabs: [
             Tab(
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Text('Section A â€“ Baseline'),
+                const Text('Section A – Baseline'),
                 if (_sectionComplete(_secA))
                   const Padding(
                     padding: EdgeInsets.only(left: 6),
@@ -222,7 +222,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
             ),
             Tab(
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Text('Section B â€“ Stress'),
+                const Text('Section B – Stress'),
                 if (_sectionComplete(_secB))
                   const Padding(
                     padding: EdgeInsets.only(left: 6),
@@ -279,7 +279,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
                         style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1D49A7))),
+                            color: Color(0xFF023047))),
                   ))
               .toList(),
         ),
@@ -307,7 +307,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              '$quadrant â€“ $quadrantLabel',
+              '$quadrant – $quadrantLabel',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -373,7 +373,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
 
   Color _quadrantColor(String q) {
     return switch (q) {
-      'O' => const Color(0xFF1D49A7),
+      'O' => const Color(0xFF023047),
       'S' => const Color(0xFF34A853),
       'T' => const Color(0xFFFA7B17),
       _ => const Color(0xFF9334E6),
@@ -427,7 +427,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('$q â€“ ${_kQuadrantLabels[q]}',
+                      Text('$q – ${_kQuadrantLabels[q]}',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: color,
@@ -457,18 +457,18 @@ class _AoqFormScreenState extends State<AoqFormScreen>
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: Color(0xFF1D49A7))),
+                            color: Color(0xFF023047))),
                     const SizedBox(height: 10),
                     _keyRow('Baseline OGI',
                         '${(ogi * 100).toStringAsFixed(1)}%'),
                     _keyRow('Stress Escalation Index (SEI)',
-                        '${(sei * 100).toStringAsFixed(1)}%  â€“  ${_seiLabel()}'),
+                        '${(sei * 100).toStringAsFixed(1)}%  –  ${_seiLabel()}'),
                     _keyRow('Primary Baseline Orientation',
-                        '$primaryB â€“ ${_kQuadrantLabels[primaryB]}'),
+                        '$primaryB – ${_kQuadrantLabels[primaryB]}'),
                     _keyRow('Primary Stress Orientation',
-                        '$primaryS â€“ ${_kQuadrantLabels[primaryS]}'),
+                        '$primaryS – ${_kQuadrantLabels[primaryS]}'),
                     _keyRow('Largest Delta Increase',
-                        '$largest â€“ ${_kQuadrantLabels[largest]}'),
+                        '$largest – ${_kQuadrantLabels[largest]}'),
                   ],
                 ),
               ),
@@ -525,7 +525,7 @@ class _AoqFormScreenState extends State<AoqFormScreen>
 
   Color _quadrantColorStatic(String q) {
     return switch (q) {
-      'O' => const Color(0xFF1D49A7),
+      'O' => const Color(0xFF023047),
       'S' => const Color(0xFF34A853),
       'T' => const Color(0xFFFA7B17),
       _ => const Color(0xFF9334E6),

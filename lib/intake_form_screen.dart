@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -295,14 +295,14 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                     const SizedBox(height: 8),
                     Row(children: [
                       const Icon(Icons.email_outlined,
-                          size: 16, color: Color(0xFF1D49A7)),
+                          size: 16, color: Color(0xFF023047)),
                       const SizedBox(width: 6),
                       Flexible(
                         child: SelectableText(
                           practitioner.email,
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1D49A7)),
+                              color: Color(0xFF023047)),
                         ),
                       ),
                     ]),
@@ -326,7 +326,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                     SelectableText(practitioner.email,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1D49A7))),
+                            color: Color(0xFF023047))),
                   ],
           ),
           actions: [
@@ -378,7 +378,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // â”€â”€ Header with logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Header with logo ───────────────────────────────────────────
               Center(
                 child: Column(
                   children: [
@@ -389,7 +389,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1D49A7),
+                        color: Color(0xFF023047),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -409,7 +409,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 8),
-              // â”€â”€ Practitioner selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Practitioner selection ─────────────────────────────────────
               if (_loadingPractitioners)
                 const Center(child: CircularProgressIndicator())
               else if (_practitioners.length > 1) ...[
@@ -430,7 +430,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 const SizedBox(height: 20),
               ],
 
-              // â”€â”€ Personal details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Personal details ───────────────────────────────────────────
               _sectionTitle('Patient Details'),
               const SizedBox(height: 12),
               if (_clientIdStatus != _ClientIdStatus.idle) ...[
@@ -500,7 +500,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 ),
               ]),
 
-              // â”€â”€ Referral â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Referral ───────────────────────────────────────────────────
               const SizedBox(height: 20),
               _sectionTitle('How were you referred?'),
               const SizedBox(height: 8),
@@ -543,7 +543,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 _field(_refOtherCtrl, 'Other details'),
               ],
 
-              // â”€â”€ Medical â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Medical ────────────────────────────────────────────────────
               const SizedBox(height: 20),
               _sectionTitle('Medical History'),
               const SizedBox(height: 8),
@@ -570,7 +570,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 _field(_medicationCtrl, 'Medication details'),
               ],
 
-              // â”€â”€ Goals & history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Goals & history ────────────────────────────────────────────
               const SizedBox(height: 20),
               _sectionTitle('Goals & Background'),
               const SizedBox(height: 8),
@@ -598,28 +598,28 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 _field(_fearsCtrl, 'Please describe'),
               ],
 
-              // â”€â”€ Contact lenses notice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Contact lenses notice ──────────────────────────────────────
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Color(0xFF1D49A7), width: 1.5),
+                  border: Border.all(color: Color(0xFF023047), width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                   color: Color(0xFFEEF3FB),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, size: 18, color: Color(0xFF1D49A7)),
+                    Icon(Icons.info_outline, size: 18, color: Color(0xFF023047)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: const Text(
                         'IF YOU WEAR CONTACT LENSES AND CANNOT COMFORTABLY CLOSE YOUR EYES '
-                        'FOR APPROXIMATELY Â½ HOUR WITH THEM IN YOUR EYES, PLEASE REMOVE THEM.',
+                        'FOR APPROXIMATELY ½ HOUR WITH THEM IN YOUR EYES, PLEASE REMOVE THEM.',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1D49A7),
+                          color: Color(0xFF023047),
                         ),
                       ),
                     ),
@@ -627,7 +627,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
                 ),
               ),
 
-              // â”€â”€ Page 1 consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Page 1 consent ─────────────────────────────────────────────
               const SizedBox(height: 24),
               _sectionTitle('Consent & Fee Agreement (Page 1)'),
               const SizedBox(height: 8),
@@ -660,7 +660,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               _field(_consentNameCtrl, 'I, (your full name)', required: true),
               const SizedBox(height: 8),
               const Text(
-                'â€¦gives permission to the Mental Health Professional (MHP) to work with me on my mental '
+                '…gives permission to the Mental Health Professional (MHP) to work with me on my mental '
                 'health condition(s) for the required number of sessions.',
                 style: TextStyle(fontSize: 12, color: Color(0xFF555555)),
               ),
@@ -669,7 +669,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               const SizedBox(height: 6),
               SignaturePad(key: _sig1Key),
 
-              // â”€â”€ Page 2 confidentiality â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Page 2 confidentiality ─────────────────────────────────────
               const SizedBox(height: 24),
               _sectionTitle('Confidentiality & Safety Statement (Page 2)'),
               const SizedBox(height: 8),
@@ -699,7 +699,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
               const SizedBox(height: 6),
               SignaturePad(key: _sig2Key),
 
-              // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Submit ─────────────────────────────────────────────────────
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submitting ? null : _submit,
@@ -727,7 +727,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
   Widget _sectionTitle(String title) {
     return Text(title,
         style: const TextStyle(
-            fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1D49A7)));
+            fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF023047)));
   }
 
   Widget _label(String text) {
@@ -784,7 +784,7 @@ class _IntakeFormScreenState extends State<IntakeFormScreen> {
   }
 }
 
-// â”€â”€ Client ID badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Client ID badge ────────────────────────────────────────────────────
 
 class _ClientIdBadge extends StatelessWidget {
   final String? clientId;
@@ -792,14 +792,14 @@ class _ClientIdBadge extends StatelessWidget {
   const _ClientIdBadge({this.clientId, required this.status});
 
   String get _message => switch (status) {
-        _ClientIdStatus.checking => 'Checking your client IDâ€¦',
+        _ClientIdStatus.checking => 'Checking your client ID…',
         _ClientIdStatus.found => 'Client ID: $clientId',
         _ClientIdStatus.newClient =>
-          'New client â€” your ID will be assigned on submission',
+          'New client — your ID will be assigned on submission',
         _ClientIdStatus.signInRequired =>
           'Sign in with Google to look up or assign your client ID',
         _ClientIdStatus.error =>
-          'Could not check client ID right now â€” it will still be assigned on submission',
+          'Could not check client ID right now — it will still be assigned on submission',
         _ClientIdStatus.idle => '',
       };
 
@@ -813,11 +813,11 @@ class _ClientIdBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFEAF0FB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF1D49A7).withValues(alpha: 0.3)),
+        border: Border.all(color: const Color(0xFF023047).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.badge_outlined, size: 18, color: Color(0xFF1D49A7)),
+          const Icon(Icons.badge_outlined, size: 18, color: Color(0xFF023047)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -825,7 +825,7 @@ class _ClientIdBadge extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: _emphasized ? FontWeight.w700 : FontWeight.w500,
-                color: _emphasized ? const Color(0xFF1D49A7) : Colors.grey.shade700,
+                color: _emphasized ? const Color(0xFF023047) : Colors.grey.shade700,
               ),
             ),
           ),
@@ -841,7 +841,7 @@ class _ClientIdBadge extends StatelessWidget {
   }
 }
 
-// â”€â”€ Signature pad â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Signature pad ────────────────────────────────────────────────────────────
 
 class SignaturePad extends StatefulWidget {
   const SignaturePad({super.key});

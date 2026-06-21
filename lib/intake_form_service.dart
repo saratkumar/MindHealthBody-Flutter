@@ -8,8 +8,8 @@ import 'download_helper.dart';
 import 'gmail_service.dart';
 import 'intake_form.dart';
 
-// R=0x1D G=0x49 B=0xA7 → sampled from the MindBody Practice logo
-const _kBrandBlue = PdfColor(0x1D / 255, 0x49 / 255, 0xA7 / 255);
+// R=0x02 G=0x30 B=0x47 -> brand navy
+const _kBrandBlue = PdfColor(0x02 / 255, 0x30 / 255, 0x47 / 255);
 
 class IntakeFormService {
   /// Sends the PDF by email (to practitioner + CC client) when a Google
@@ -53,7 +53,7 @@ class IntakeFormService {
       logo = pw.MemoryImage(data.buffer.asUint8List());
     } catch (_) {}
 
-    // ── Page 1 ──────────────────────────────────────────────────────────────
+    // -- Page 1 --------------------------------------------------------------
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 36),
@@ -102,7 +102,7 @@ class IntakeFormService {
               pw.Text(
                   clientId != null
                       ? 'Client ID: $clientId'
-                      : '[Official use – Patient ID: ________________  MHP ID No: ________]',
+                      : '[Official use — Patient ID: ________________  MHP ID No: ________]',
                   style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
             ]),
           ),
@@ -241,7 +241,7 @@ class IntakeFormService {
       ),
     ));
 
-    // ── Page 2: Confidentiality & Safety Statement ───────────────────────────
+    // -- Page 2: Confidentiality & Safety Statement ---------------------------
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 36),
@@ -349,7 +349,7 @@ class IntakeFormService {
     return doc.save();
   }
 
-  // ── PDF helpers ─────────────────────────────────────────────────────────────
+  // -- PDF helpers -------------------------------------------------------------
 
   static pw.Widget _row2(String l1, String v1, String l2, String v2) {
     return pw.Padding(
@@ -408,7 +408,7 @@ class IntakeFormService {
       ),
       child: checked
           ? pw.Center(
-              child: pw.Text('✓',
+              child: pw.Text('?',
                   style: pw.TextStyle(fontSize: 7, color: PdfColors.white)))
           : null,
     );

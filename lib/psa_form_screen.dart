@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -89,7 +89,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
   }
 
   Map<String, int> _calculate() {
-    // Sum column i across all 10 questions â†’ type i total
+    // Sum column i across all 10 questions → type i total
     final totals = List.filled(4, 0);
     for (final row in _ranks) {
       for (var i = 0; i < 4; i++) {
@@ -124,7 +124,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
         setState(() { _result = scores; _submitting = false; });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
-              'Results shown locally â€” sign in with Google to save to the shared spreadsheet.'),
+              'Results shown locally — sign in with Google to save to the shared spreadsheet.'),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 5),
         ));
@@ -161,7 +161,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PSA â€“ Personality Styles Assessment')),
+      appBar: AppBar(title: const Text('PSA – Personality Styles Assessment')),
       body: _result != null ? _buildResult() : _buildForm(),
     );
   }
@@ -191,7 +191,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
           Text('Your Primary Style: $primary',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1D49A7))),
+                  fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF023047))),
           const SizedBox(height: 20),
           ...sorted.map((type) {
             final score = scores[type.toLowerCase()] ?? 0;
@@ -244,7 +244,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
                           style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1D49A7))),
+                              color: Color(0xFF023047))),
                     )),
               ],
             ),
@@ -271,7 +271,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
                           style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1D49A7))),
+                              color: Color(0xFF023047))),
                     ]),
                   );
                 }),
@@ -322,7 +322,7 @@ class _PsaFormScreenState extends State<PsaFormScreen> {
                       child: DropdownButton<int>(
                         value: _ranks[q][opt],
                         isExpanded: true,
-                        hint: const Text('â€“', textAlign: TextAlign.center),
+                        hint: const Text('–', textAlign: TextAlign.center),
                         items: [1, 2, 3, 4]
                             .map((v) => DropdownMenuItem(
                                 value: v,
@@ -382,7 +382,7 @@ class _ScoreBar extends StatelessWidget {
               Text('$score / $maxScore',
                   style: TextStyle(
                       color: isPrimary
-                          ? const Color(0xFF1D49A7)
+                          ? const Color(0xFF023047)
                           : Colors.grey.shade600,
                       fontWeight: isPrimary ? FontWeight.bold : FontWeight.normal)),
             ],
@@ -392,7 +392,7 @@ class _ScoreBar extends StatelessWidget {
             value: pct,
             minHeight: 10,
             backgroundColor: Colors.grey.shade200,
-            color: isPrimary ? const Color(0xFF1D49A7) : Colors.grey.shade400,
+            color: isPrimary ? const Color(0xFF023047) : Colors.grey.shade400,
             borderRadius: BorderRadius.circular(6),
           ),
         ],

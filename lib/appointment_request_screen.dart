@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +7,7 @@ import 'booking_provider.dart';
 import 'user_registry.dart';
 
 /// Client-facing reservation form. The client freely picks their preferred
-/// date and time â€” no calendar-availability check or slot restriction â€” and
+/// date and time — no calendar-availability check or slot restriction — and
 /// this emails the practitioner directly so they can confirm or adjust.
 class AppointmentRequestScreen extends StatefulWidget {
   const AppointmentRequestScreen({super.key});
@@ -172,7 +172,7 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
             ),
           Text(
             'Pick your preferred date and time. There is no need to check '
-            'availability â€” your practitioner will contact you to confirm.',
+            'availability — your practitioner will contact you to confirm.',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
@@ -245,7 +245,7 @@ class _PickerTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: const Color(0xFF1D49A7)),
+            Icon(icon, size: 20, color: const Color(0xFF023047)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
